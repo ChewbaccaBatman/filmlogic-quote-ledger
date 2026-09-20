@@ -840,6 +840,7 @@
         <div class="actions">
           <span class="status-msg" id="copyStatus" aria-live="polite"></span>
           <span class="status-msg" id="saveStatus" aria-live="polite"></span>
+          <button type="button" class="btn ghost" id="newQuoteBtn">New Quote</button>
           <button type="button" class="btn ghost" id="resetBtn">Reset</button>
           <button type="button" class="btn ghost" id="printBtn">Print Quote</button>
           <button type="button" class="btn solid" id="copyBtn">Copy for Email</button>
@@ -1766,6 +1767,35 @@
       document.getElementById(id).value = '50';
     });
     seedDefaultPieces();
+    stampHeader();
+    render();
+  });
+
+  document.getElementById('newQuoteBtn').addEventListener('click', function(){
+    document.getElementById('originCity').value = '';
+    document.getElementById('originState').value = '';
+    document.getElementById('destCity').value = '';
+    document.getElementById('destState').value = '';
+    document.getElementById('shipValue').value = '';
+    document.getElementById('refNumber').value = '';
+    setJobType('Door to Door');
+    setCarriageMode('Airfreight');
+    setAirfreightService('General');
+    document.getElementById('pickup').value = '0';
+    document.getElementById('airportTransfer').value = '0';
+    document.getElementById('delivery').value = '0';
+    document.getElementById('carriage').value = '0';
+    ['pickup-margin','airportTransfer-margin','carriage-margin','carriage-margin-manual','delivery-margin'].forEach(function(id){
+      document.getElementById(id).value = '50';
+    });
+    document.getElementById('manpower-pickup-on').checked = false;
+    document.getElementById('manpower-delivery-on').checked = false;
+    document.getElementById('liftgate-on').checked = false;
+    document.getElementById('overtime-on').checked = false;
+    document.getElementById('pallet-qty').value = '0';
+    document.getElementById('waiting-hrs').value = '0';
+    clearPieceRows();
+    addPieceRow();
     stampHeader();
     render();
   });
