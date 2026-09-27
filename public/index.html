@@ -615,15 +615,15 @@
   }
   .line-edit.contingent .line-label-input{ color:var(--ink-faint); }
   .line-edit.contingent .line-amount-input{ color:var(--ink-faint); font-style:italic; }
-  .line-reorder{ display:flex; flex-direction:column; gap:1px; flex:none; }
-  .line-move-btn{
-    background:none; border:1px solid transparent; color:var(--ink-faint);
-    cursor:pointer; font-size:.65rem; line-height:1; padding:1px 3px;
-    border-radius:3px; width:18px; text-align:center;
-    transition:background .12s ease, color .12s ease;
+  .line-drag-handle{
+    cursor:grab; color:var(--ink-faint); flex:none;
+    font-size:1rem; line-height:1; padding:1px 4px;
+    border-radius:3px; user-select:none;
+    transition:color .12s ease;
   }
-  .line-move-btn:hover:not(:disabled){ background:var(--surface-2); color:var(--ink); border-color:var(--line-strong); }
-  .line-move-btn:disabled{ opacity:.25; cursor:default; }
+  .line-drag-handle:hover{ color:var(--ink); }
+  .sortable-ghost{ opacity:.4; background:var(--surface-2); border-radius:4px; }
+  .sortable-chosen{ background:var(--surface-2); }
   .line-label-input{
     flex:1; min-width:0;
     font-family:-apple-system, BlinkMacSystemFont, 'Public Sans', sans-serif;
@@ -669,6 +669,13 @@
     transition:color .12s ease;
   }
   .ticket-reset-overrides:hover{ color:var(--rust-ink); }
+  .ticket-restore-hidden{
+    margin-top:2px; font-size:.72rem; color:var(--teal);
+    background:none; border:none; padding:3px 6px; cursor:pointer;
+    border-radius:3px; display:block;
+    transition:color .12s ease;
+  }
+  .ticket-restore-hidden:hover{ color:var(--ink); }
 
   /* ---------- Fuel Calculator ---------- */
   .fuel-summary-box{
@@ -1015,7 +1022,8 @@
 
         <div class="ticket-lines-list" id="ticketLinesList"></div>
         <button type="button" class="ticket-add-custom" id="addCustomLineBtn">+ Add custom line</button>
-        <button type="button" class="ticket-reset-overrides" id="resetOverridesBtn" title="Clear all manual label/amount edits">Reset overrides</button>
+        <button type="button" class="ticket-restore-hidden" id="restoreHiddenBtn" hidden>Restore hidden</button>
+        <button type="button" class="ticket-reset-overrides" id="resetOverridesBtn" title="Reset line order, labels, amounts, and restore all deleted lines">Reset ticket</button>
 
         <div class="ticket-total">
           <span>Estimated Total</span>
@@ -1228,7 +1236,7 @@
 <textarea id="copyFallback" aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;"></textarea>
 
 <script src="/airports.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 (function(){
@@ -1266,8 +1274,10 @@
   var ticketOrder = DEFAULT_TICKET_ORDER.slice();
   var ticketOverrides = {};  // id → { label: null|string, amount: null|number }
   var customLines = [];      // [{ id, label, amount }]
+  var deletedDefaultIds = {}; // id → true for default lines user has deleted
   var customLineCounter = 0;
   var ticketInputFocused = false;
+  var sortableInstance = null;
 
   // Internal-only key for the History record — never shown to the user or
   // the client. The user's own Reference Number (if any) is a separate,
@@ -1697,6 +1707,7 @@
 
     var lines = [];
     ticketOrder.forEach(function(id) {
+      if(deletedDefaultIds[id]) return; // user deleted this default line
       var def = defs[id];
       if(!def) {
         // custom line
@@ -1724,23 +1735,16 @@
                 .reduce(function(s, l){ return s + l.effectiveAmount; }, 0);
   }
 
-  function buildLineEl(line, idx, count) {
+  function buildLineEl(line) {
     var div = document.createElement('div');
     div.className = 'line-edit' + ((!line.billable && !line.isCustom) ? ' contingent' : '');
     div.dataset.id = line.id;
 
-    var reorder = document.createElement('div');
-    reorder.className = 'line-reorder';
-    var upBtn = document.createElement('button');
-    upBtn.type = 'button'; upBtn.className = 'line-move-btn'; upBtn.textContent = '↑';
-    upBtn.title = 'Move up'; upBtn.disabled = idx === 0;
-    upBtn.addEventListener('click', function(){ moveTicketLine(line.id, -1); });
-    var downBtn = document.createElement('button');
-    downBtn.type = 'button'; downBtn.className = 'line-move-btn'; downBtn.textContent = '↓';
-    downBtn.title = 'Move down'; downBtn.disabled = idx === count - 1;
-    downBtn.addEventListener('click', function(){ moveTicketLine(line.id, 1); });
-    reorder.appendChild(upBtn); reorder.appendChild(downBtn);
-    div.appendChild(reorder);
+    var handle = document.createElement('span');
+    handle.className = 'line-drag-handle';
+    handle.title = 'Drag to reorder';
+    handle.textContent = '⋮⋮'; // ⋮⋮ braille-style dots
+    div.appendChild(handle);
 
     var labelInput = document.createElement('input');
     labelInput.type = 'text'; labelInput.className = 'line-label-input';
@@ -1766,18 +1770,20 @@
     amtInput.addEventListener('blur', function(){ ticketInputFocused = false; render(); });
     div.appendChild(amtInput);
 
-    if(line.isCustom) {
-      var removeBtn = document.createElement('button');
-      removeBtn.type = 'button'; removeBtn.className = 'line-remove-btn'; removeBtn.textContent = '\xd7';
-      removeBtn.title = 'Remove line';
-      removeBtn.addEventListener('click', function(){
+    var removeBtn = document.createElement('button');
+    removeBtn.type = 'button'; removeBtn.className = 'line-remove-btn'; removeBtn.textContent = '\xd7';
+    removeBtn.title = 'Remove line';
+    removeBtn.addEventListener('click', function(){
+      if(line.isCustom) {
         customLines = customLines.filter(function(cl){ return cl.id !== line.id; });
         ticketOrder = ticketOrder.filter(function(x){ return x !== line.id; });
         delete ticketOverrides[line.id];
-        render();
-      });
-      div.appendChild(removeBtn);
-    }
+      } else {
+        deletedDefaultIds[line.id] = true;
+      }
+      render();
+    });
+    div.appendChild(removeBtn);
     return div;
   }
 
@@ -1791,10 +1797,36 @@
       existingIds.some(function(id, i){ return id !== newIds[i]; });
 
     if(needRebuild) {
+      if(sortableInstance){ sortableInstance.destroy(); sortableInstance = null; }
       container.innerHTML = '';
-      lines.forEach(function(l, i){ container.appendChild(buildLineEl(l, i, lines.length)); });
+      lines.forEach(function(l){ container.appendChild(buildLineEl(l)); });
+      if(window.Sortable){
+        sortableInstance = Sortable.create(container, {
+          animation: 150,
+          handle: '.line-drag-handle',
+          ghostClass: 'sortable-ghost',
+          chosenClass: 'sortable-chosen',
+          onEnd: function(){
+            var items = container.querySelectorAll('.line-edit[data-id]');
+            var newVisIds = Array.prototype.map.call(items, function(el){ return el.dataset.id; });
+            // Snapshot which IDs were visible before rebuild
+            var wasVisible = {};
+            newIds.forEach(function(id){ wasVisible[id] = true; });
+            // Merge new visible order back into ticketOrder preserving non-visible slots
+            var vi = 0, newOrder = [];
+            ticketOrder.forEach(function(id){
+              if(wasVisible[id]){ newOrder.push(newVisIds[vi++]); }
+              else { newOrder.push(id); }
+            });
+            while(vi < newVisIds.length){ newOrder.push(newVisIds[vi++]); }
+            ticketOrder = newOrder;
+            var d2 = computeData();
+            text('totalAmt', fmt(computeTicketTotal(buildVisibleLines(d2))));
+          }
+        });
+      }
     } else {
-      lines.forEach(function(l, i) {
+      lines.forEach(function(l) {
         var el = container.querySelector('.line-edit[data-id="' + l.id + '"]');
         if(!el) return;
         el.className = 'line-edit' + ((!l.billable && !l.isCustom) ? ' contingent' : '');
@@ -1802,27 +1834,8 @@
         if(li && document.activeElement !== li) li.value = l.effectiveLabel;
         var ai = el.querySelector('.line-amount-input');
         if(ai && document.activeElement !== ai) ai.value = l.effectiveAmount.toFixed(2);
-        var btns = el.querySelectorAll('.line-move-btn');
-        if(btns[0]) btns[0].disabled = i === 0;
-        if(btns[1]) btns[1].disabled = i === lines.length - 1;
       });
     }
-  }
-
-  function moveTicketLine(id, direction) {
-    var d = computeData();
-    var visLines = buildVisibleLines(d);
-    var visIdx = -1;
-    for(var i = 0; i < visLines.length; i++) { if(visLines[i].id === id){ visIdx = i; break; } }
-    if(visIdx < 0) return;
-    var targetVisIdx = visIdx + direction;
-    if(targetVisIdx < 0 || targetVisIdx >= visLines.length) return;
-    var targetId = visLines[targetVisIdx].id;
-    var idxA = ticketOrder.indexOf(id);
-    var idxB = ticketOrder.indexOf(targetId);
-    if(idxA < 0 || idxB < 0) return;
-    ticketOrder[idxA] = targetId; ticketOrder[idxB] = id;
-    render();
   }
 
   function render(){
@@ -1899,6 +1912,15 @@
     var visLines = buildVisibleLines(d);
     renderTicketLines(visLines);
     text('totalAmt', fmt(computeTicketTotal(visLines)));
+    updateRestoreBtn();
+  }
+
+  function updateRestoreBtn(){
+    var n = Object.keys(deletedDefaultIds).length;
+    var btn = document.getElementById('restoreHiddenBtn');
+    if(!btn) return;
+    btn.hidden = n === 0;
+    if(n > 0) btn.textContent = 'Restore ' + n + ' hidden line' + (n === 1 ? '' : 's');
   }
 
   // ---------- Copy for email (client-safe: sell prices only, no cost/margin) ----------
@@ -1910,7 +1932,7 @@
 
   function buildPlainText(d){
     var visLines = buildVisibleLines(d);
-    var billableLines = visLines.filter(function(l){ return l.billable; });
+    var billableLines = visLines.filter(function(l){ return l.billable && l.effectiveAmount !== 0; });
     var total = computeTicketTotal(visLines);
     var rule = '-'.repeat(46);
     var lines = [];
@@ -1951,7 +1973,7 @@
 
   function buildHtmlTable(d){
     var visLines = buildVisibleLines(d);
-    var billableLines = visLines.filter(function(l){ return l.billable; });
+    var billableLines = visLines.filter(function(l){ return l.billable && l.effectiveAmount !== 0; });
     var total = computeTicketTotal(visLines);
 
     var rows = '';
@@ -2014,26 +2036,131 @@
   }
 
   function makePdf(){
-    var ticketEl = document.getElementById('ticket');
-    if(!window.html2canvas || !window.jspdf){ alert('PDF libraries not loaded yet, please wait a moment and try again.'); return; }
+    if(!window.jspdf){ alert('PDF library not loaded yet, please wait a moment and try again.'); return; }
     var jsPDF = window.jspdf.jsPDF;
     var btn = document.getElementById('pdfBtn');
     btn.disabled = true; btn.textContent = 'Generating…';
-    html2canvas(ticketEl, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(function(canvas){
-      var imgData = canvas.toDataURL('image/png');
-      var pdfW = 210;
-      var pxPerMm = canvas.width / pdfW;
-      var pdfH = canvas.height / pxPerMm;
-      var pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pdfW, pdfH] });
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
+    try {
       var d = computeData();
+      var visLines = buildVisibleLines(d);
+      var outputLines = visLines.filter(function(l){ return l.billable && l.effectiveAmount !== 0; });
+      var total = computeTicketTotal(visLines);
+
+      var pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+      var PW = 215.9, PH = 279.4;
+      var mL = 22, mR = 22, cW = PW - mL - mR;
+      var y = 0;
+
+      // ── BLACK HEADER BAND ──────────────────────────────────────────────
+      pdf.setFillColor(0, 0, 0);
+      pdf.rect(0, 0, PW, 28, 'F');
+
+      // Logo — addImage handles data: URLs natively in jsPDF 2.x
+      try { pdf.addImage(FILM_LOGIC_LOGO, 'PNG', mL, 8, 38, 9.5); } catch(e){}
+
+      // "FREIGHT QUOTE" label — right side of header
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(219, 87, 29); // rust
+      pdf.text('FREIGHT QUOTE', PW - mR, 15, { align: 'right' });
+
+      y = 28;
+
+      // ── REF / DATE STRIP ───────────────────────────────────────────────
+      pdf.setFillColor(242, 241, 245);
+      pdf.rect(0, y, PW, 11, 'F');
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(108, 108, 112);
+      var refLine = d.refNumber ? ('Ref ' + d.refNumber + '  ·  Prepared ' + d.date) : ('Prepared ' + d.date);
+      pdf.text(refLine, mL, y + 7.5);
+
+      y = 39;
+
+      // ── ROUTE BLOCK ────────────────────────────────────────────────────
+      y += 4;
+      // Job-type badge (green pill)
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(7);
+      var badgeLabel = d.jobType.toUpperCase();
+      var badgeW = pdf.getTextWidth(badgeLabel) + 8;
+      pdf.setFillColor(46, 125, 107);
+      pdf.roundedRect(mL, y, badgeW, 6.5, 3.25, 3.25, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.text(badgeLabel, mL + 4, y + 4.5);
+      y += 10;
+
+      // Origin → Dest
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(17);
+      pdf.setTextColor(12, 12, 13);
+      pdf.text(d.originLabel + '  →  ' + d.destLabel, mL, y);
+      y += 8;
+
+      // Cargo recap
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(108, 108, 112);
+      pdf.text(d.pieces + ' pcs  ·  ' + fmtLb(d.billableWeight) + ' chargeable wt  ·  ' + fmt(d.shipValue).replace(/\.00$/, '') + ' declared value', mL, y);
+      y += 10;
+
+      // ── CHARGES TABLE ──────────────────────────────────────────────────
+      pdf.setDrawColor(227, 226, 231);
+      pdf.setLineWidth(0.25);
+      pdf.line(mL, y, PW - mR, y);
+      y += 8;
+
+      pdf.setFontSize(10);
+      outputLines.forEach(function(l){
+        if(y > PH - 45){ pdf.addPage(); y = 20; }
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(12, 12, 13);
+        pdf.text(l.effectiveLabel, mL, y);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(fmt(l.effectiveAmount), PW - mR, y, { align: 'right' });
+        pdf.setDrawColor(235, 234, 239);
+        pdf.setLineWidth(0.15);
+        pdf.line(mL, y + 2.5, PW - mR, y + 2.5);
+        y += 9.5;
+      });
+
+      y += 3;
+
+      // ── ESTIMATED TOTAL BLOCK ──────────────────────────────────────────
+      if(y > PH - 35){ pdf.addPage(); y = 20; }
+      pdf.setFillColor(252, 227, 211); // rust-tint
+      pdf.roundedRect(mL, y, cW, 19, 4, 4, 'F');
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(174, 65, 20); // rust-ink
+      pdf.text('ESTIMATED TOTAL', mL + 7, y + 12);
+      pdf.setFontSize(19);
+      pdf.text(fmt(total), PW - mR - 7, y + 13, { align: 'right' });
+      y += 27;
+
+      // ── FOOTER ─────────────────────────────────────────────────────────
+      pdf.setDrawColor(227, 226, 231);
+      pdf.setLineWidth(0.2);
+      pdf.line(mL, y, PW - mR, y);
+      y += 6;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(154, 154, 158);
+      var footerLines = pdf.splitTextToSize(
+        'Estimate only, subject to carrier tariffs, fuel surcharge, and customs assessment. ' +
+        'Waiting time and man power, if incurred, are billed at the rates shown above; ' +
+        'other add-ons and overtime, if incurred, are flat fees.',
+        cW
+      );
+      pdf.text(footerLines, mL, y);
+
       var filename = 'filmlogic-quote' + (d.refNumber ? '-' + d.refNumber.replace(/[^a-z0-9]/gi, '-') : '') + '.pdf';
       pdf.save(filename);
       btn.disabled = false; btn.textContent = 'Make PDF';
-    }).catch(function(e){
-      console.error(e);
+    } catch(e){
+      console.error('PDF error:', e);
       btn.disabled = false; btn.textContent = 'Make PDF';
-    });
+    }
   }
 
   function fallbackCopy(textValue){
@@ -2136,6 +2263,7 @@
       ticketOrder: ticketOrder.slice(),
       ticketOverrides: JSON.parse(JSON.stringify(ticketOverrides)),
       customLines: JSON.parse(JSON.stringify(customLines)),
+      deletedDefaultIds: JSON.parse(JSON.stringify(deletedDefaultIds)),
       total: total
     };
   }
@@ -2220,6 +2348,7 @@
     ticketOverrides = data.ticketOverrides ? JSON.parse(JSON.stringify(data.ticketOverrides)) : {};
     customLines = data.customLines ? JSON.parse(JSON.stringify(data.customLines)) : [];
     customLineCounter = customLines.length ? Math.max.apply(null, customLines.map(function(c){ return parseInt(c.id.replace('custom-','')) || 0; })) : 0;
+    deletedDefaultIds = data.deletedDefaultIds ? JSON.parse(JSON.stringify(data.deletedDefaultIds)) : {};
     document.getElementById('delivery-on').checked = data.deliveryOn !== undefined ? !!data.deliveryOn : true;
     document.getElementById('bill-fuel-pickup').checked = data.billFuelPickup !== undefined ? !!data.billFuelPickup : true;
     document.getElementById('bill-fuel-delivery').checked = data.billFuelDelivery !== undefined ? !!data.billFuelDelivery : true;
@@ -2443,6 +2572,7 @@
     ticketOverrides = {};
     customLines = [];
     customLineCounter = 0;
+    deletedDefaultIds = {};
     seedDefaultPieces();
     stampHeader();
     render();
@@ -2494,6 +2624,7 @@
     ticketOverrides = {};
     customLines = [];
     customLineCounter = 0;
+    deletedDefaultIds = {};
     clearPieceRows();
     addPieceRow();
     stampHeader();
@@ -2508,11 +2639,17 @@
     render();
   });
 
+  document.getElementById('restoreHiddenBtn').addEventListener('click', function(){
+    deletedDefaultIds = {};
+    render();
+  });
+
   document.getElementById('resetOverridesBtn').addEventListener('click', function(){
     ticketOrder = DEFAULT_TICKET_ORDER.slice();
     ticketOverrides = {};
     customLines = [];
     customLineCounter = 0;
+    deletedDefaultIds = {};
     render();
   });
 
