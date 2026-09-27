@@ -833,6 +833,10 @@
           </div>
 
           <div class="var-item">
+            <div class="auto-calc-row" style="margin-bottom:14px;">
+              <input type="checkbox" id="airport-on" checked>
+              <label for="airport-on" style="font-weight:600;color:var(--ink);">This job includes an airport transfer</label>
+            </div>
             <div class="auto-calc-row">
               <input type="checkbox" id="airport-cost-auto" checked>
               <label for="airport-cost-auto">Auto-calculate from Fuel Calculator (uses Pickup surcharge %)</label>
@@ -914,6 +918,11 @@
               <button type="button" class="seg-btn active" data-svc="General">General</button>
               <button type="button" class="seg-btn" data-svc="Express">Express</button>
             </div>
+          </div>
+
+          <div class="auto-calc-row" style="margin-bottom:14px;margin-top:4px;">
+            <input type="checkbox" id="carriage-on" checked>
+            <label for="carriage-on" style="font-weight:600;color:var(--ink);">Bill Main Carriage on this quote</label>
           </div>
 
           <div class="var-item" style="margin-top:0;">
@@ -1539,6 +1548,8 @@
     var standardSub = ctpat + tsa + handling;
 
     var deliveryOn = document.getElementById('delivery-on').checked;
+    var airportOn = document.getElementById('airport-on').checked;
+    var carriageOn = document.getElementById('carriage-on').checked;
     var fuelPickupBillOn = document.getElementById('bill-fuel-pickup').checked;
     var fuelDeliveryBillOn = document.getElementById('bill-fuel-delivery').checked;
 
@@ -1585,7 +1596,8 @@
     var pickupFuelAmtEff = fuelPickupBillOn ? pickupFuelAmt : 0;
     var deliveryFuelAmtEff = (deliveryOn && fuelDeliveryBillOn) ? deliveryFuelAmt : 0;
     var deliverySell = deliveryOn ? delivery.sell : 0;
-    var groundSub = pickup.sell + pickupFuelAmtEff + airport.sell + deliverySell + deliveryFuelAmtEff;
+    var airportSell = airportOn ? airport.sell : 0;
+    var groundSub = pickup.sell + pickupFuelAmtEff + airportSell + deliverySell + deliveryFuelAmtEff;
 
     var carriage = lineItem('carriage', carriageMarginId());
     var carriageMinApplied = false;
@@ -1661,7 +1673,8 @@
       pickupBuyingCost: pickupBuyingCost, deliveryBuyingCost: deliveryBuyingCost,
       pickupCostAuto: pickupCostAuto, deliveryCostAuto: deliveryCostAuto, airportCostAuto: airportCostAuto,
       pickup: pickup, pickupLabel: pickupLabel, pickupFuelAmt: pickupFuelAmt,
-      fuelPickupBillOn: fuelPickupBillOn, fuelDeliveryBillOn: fuelDeliveryBillOn, deliveryOn: deliveryOn,
+      fuelPickupBillOn: fuelPickupBillOn, fuelDeliveryBillOn: fuelDeliveryBillOn,
+      deliveryOn: deliveryOn, airportOn: airportOn, carriageOn: carriageOn,
       airport: airport,
       delivery: delivery, deliveryLabel: deliveryLabel, deliveryFuelAmt: deliveryFuelAmt,
       groundSub: groundSub,
@@ -1689,8 +1702,8 @@
       pickupFuel:      { label:'Fuel Charge (Pickup)',    amount:d.pickupFuelAmt,      billable:true,  show:d.fuelPickupBillOn },
       liftgatePickup:  { label:'Lift Gate – Pickup', amount:d.liftGatePickupFee,  billable:d.liftGatePickupOn },
       manpowerPickup:  { label:'Man Power – Pickup', amount:d.manPowerPickupFee,  billable:d.manPowerPickupOn },
-      airport:         { label:'Airport Transfer',       amount:d.airport.sell,       billable:true },
-      carriage:        { label:d.carriageLabel,          amount:d.carriage.sell,      billable:true },
+      airport:         { label:'Airport Transfer',       amount:d.airport.sell,       billable:true, show:d.airportOn },
+      carriage:        { label:d.carriageLabel,          amount:d.carriage.sell,      billable:true, show:d.carriageOn },
       delivery:        { label:d.deliveryLabel,          amount:d.delivery.sell,      billable:true,  show:d.deliveryOn },
       deliveryFuel:    { label:'Fuel Charge (Delivery)', amount:d.deliveryFuelAmt,    billable:true,  show:d.deliveryOn && d.fuelDeliveryBillOn },
       liftgateDelivery:{ label:'Lift Gate – Delivery', amount:d.liftGateDeliveryFee, billable:d.liftGateDeliveryOn, show:d.deliveryOn },
@@ -1878,16 +1891,21 @@
     document.getElementById('delivery').disabled = !d.deliveryOn || d.deliveryCostAuto;
     document.getElementById('delivery-margin').disabled = !d.deliveryOn;
     document.getElementById('delivery-cost-auto').disabled = !d.deliveryOn;
-    document.getElementById('airportTransfer').disabled = d.airportCostAuto;
+    document.getElementById('airportTransfer').disabled = !d.airportOn || d.airportCostAuto;
+    document.getElementById('airportTransfer-margin').disabled = !d.airportOn;
+    document.getElementById('airport-cost-auto').disabled = !d.airportOn;
 
     document.getElementById('carriageCostLabel').textContent = d.carriageMode + ' Cost ($)';
     document.getElementById('airfreightServiceGroup').hidden = (d.carriageMode !== 'Airfreight');
+    document.getElementById('carriage').disabled = !d.carriageOn;
+    document.getElementById('carriage-margin').disabled = !d.carriageOn;
+    document.getElementById('carriage-margin-manual').disabled = !d.carriageOn;
 
     var manualMargin = d.carriageMode === 'Dedicated Truck';
     document.getElementById('carriageMarginSelectField').hidden = manualMargin;
     document.getElementById('carriageMarginManualField').hidden = !manualMargin;
     document.getElementById('carriageMarginManualNote').hidden = !manualMargin;
-    document.getElementById('carriageMinNote').hidden = d.carriageMode !== 'Airfreight';
+    document.getElementById('carriageMinNote').hidden = !d.carriageOn || d.carriageMode !== 'Airfreight';
     document.getElementById('carriage-min-flag').hidden = !d.carriageMinApplied;
 
     text('quoteRef', d.refNumber ? ('Ref: ' + d.refNumber) : '');
@@ -2258,6 +2276,8 @@
       waitingRate: num('waiting-rate'), waitingHrs: num('waiting-hrs'),
       overtimeOn: document.getElementById('overtime-on').checked, overtimeAmt: num('overtime-amt'),
       deliveryOn: document.getElementById('delivery-on').checked,
+      airportOn: document.getElementById('airport-on').checked,
+      carriageOn: document.getElementById('carriage-on').checked,
       billFuelPickup: document.getElementById('bill-fuel-pickup').checked,
       billFuelDelivery: document.getElementById('bill-fuel-delivery').checked,
       ticketOrder: ticketOrder.slice(),
@@ -2350,6 +2370,8 @@
     customLineCounter = customLines.length ? Math.max.apply(null, customLines.map(function(c){ return parseInt(c.id.replace('custom-','')) || 0; })) : 0;
     deletedDefaultIds = data.deletedDefaultIds ? JSON.parse(JSON.stringify(data.deletedDefaultIds)) : {};
     document.getElementById('delivery-on').checked = data.deliveryOn !== undefined ? !!data.deliveryOn : true;
+    document.getElementById('airport-on').checked = data.airportOn !== undefined ? !!data.airportOn : true;
+    document.getElementById('carriage-on').checked = data.carriageOn !== undefined ? !!data.carriageOn : true;
     document.getElementById('bill-fuel-pickup').checked = data.billFuelPickup !== undefined ? !!data.billFuelPickup : true;
     document.getElementById('bill-fuel-delivery').checked = data.billFuelDelivery !== undefined ? !!data.billFuelDelivery : true;
 
@@ -2533,7 +2555,7 @@
    'fuel-pickup-city','fuel-pickup-area-override','fuel-pickup-surcharge',
    'fuel-delivery-city','fuel-delivery-area-override','fuel-delivery-surcharge',
    'originCity','originState','destCity','destState','shipValue','refNumber',
-   'delivery-on','bill-fuel-pickup','bill-fuel-delivery'
+   'delivery-on','airport-on','carriage-on','bill-fuel-pickup','bill-fuel-delivery'
   ].forEach(function(id){
     var el = document.getElementById(id);
     el.addEventListener('input', render);
@@ -2566,6 +2588,8 @@
     document.getElementById('fuel-delivery-area-override').value = 'auto';
     document.getElementById('fuel-delivery-surcharge').value = '0';
     document.getElementById('delivery-on').checked = true;
+    document.getElementById('airport-on').checked = true;
+    document.getElementById('carriage-on').checked = true;
     document.getElementById('bill-fuel-pickup').checked = true;
     document.getElementById('bill-fuel-delivery').checked = true;
     ticketOrder = DEFAULT_TICKET_ORDER.slice();
@@ -2618,6 +2642,8 @@
     document.getElementById('dbl-pallet-qty').value = '0';
     document.getElementById('waiting-hrs').value = '0';
     document.getElementById('delivery-on').checked = true;
+    document.getElementById('airport-on').checked = true;
+    document.getElementById('carriage-on').checked = true;
     document.getElementById('bill-fuel-pickup').checked = true;
     document.getElementById('bill-fuel-delivery').checked = true;
     ticketOrder = DEFAULT_TICKET_ORDER.slice();
