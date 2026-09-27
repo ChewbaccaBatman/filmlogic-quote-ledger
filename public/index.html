@@ -595,7 +595,7 @@
   .history-empty{ color:var(--ink-faint); font-size:.92rem; padding:8px 0 24px; }
 
   @media print{
-    .entry, .actions, .tagline, .ticket-privacy, .tabs, .theme-toggle, #historyView, #cargoView{ display:none; }
+    .entry, .actions, .tagline, .ticket-privacy, .tabs, .theme-toggle, #historyView, #cargoView, #fuelView{ display:none; }
     .appbar{ position:static; border-bottom:2px solid #0C0C0D; margin:0; -webkit-backdrop-filter:none; backdrop-filter:none; background:#fff; }
     .layout{ display:block; }
     .ticket{ box-shadow:none; position:static; border:1px solid #999; }
@@ -605,6 +605,25 @@
   @media (prefers-reduced-motion: reduce){
     *{ transition:none !important; }
   }
+
+  /* ---------- Fuel Calculator ---------- */
+  .fuel-summary-box{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background:var(--surface-2); border:1px solid var(--line-strong);
+    border-radius:var(--radius-sm); padding:10px 14px; margin-top:14px;
+    font-size:.85rem; color:var(--ink-soft);
+  }
+  .fuel-summary-label{ font-weight:600; color:var(--ink); flex:none; }
+  .fuel-summary-status{ flex:1; min-width:0; font-family:'IBM Plex Mono', monospace; font-size:.82rem; font-variant-numeric:tabular-nums; }
+  .auto-calc-row{ display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:.82rem; color:var(--ink-soft); }
+  .auto-calc-row input[type="checkbox"]{ width:16px; height:16px; cursor:pointer; accent-color:var(--teal); flex:none; }
+  .auto-calc-row label{ cursor:pointer; }
+  .fuel-match-note{ margin:10px 0 0; font-size:.82rem; color:var(--ink-soft); }
+  .fuel-match-note.matched{ color:var(--teal); font-weight:500; }
+  .fuel-match-note.no-match{ color:var(--ink-faint); font-style:italic; }
+  .fuel-match-note.manual{ color:var(--rust-ink); font-weight:500; }
+  .fuel-readout-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px; }
+  @media (max-width:520px){ .fuel-readout-grid{ grid-template-columns:1fr; } }
 </style>
 
 <div class="app">
@@ -618,6 +637,7 @@
     <nav class="tabs" role="tablist" aria-label="Sections">
       <button type="button" class="tab-btn active" id="tabBuilderBtn" role="tab" aria-selected="true" aria-controls="builderView">Quote Builder</button>
       <button type="button" class="tab-btn" id="tabCargoBtn" role="tab" aria-selected="false" aria-controls="cargoView">Cargo Calculator</button>
+      <button type="button" class="tab-btn" id="tabFuelBtn" role="tab" aria-selected="false" aria-controls="fuelView">Fuel Calculator</button>
       <button type="button" class="tab-btn" id="tabHistoryBtn" role="tab" aria-selected="false" aria-controls="historyView">History</button>
     </nav>
     <button type="button" class="btn ghost small" id="newQuoteBtn">+ New Quote</button>
@@ -709,33 +729,24 @@
                 <button type="button" class="seg-btn" data-type="In Truck">In Truck</button>
               </div>
             </div>
+            <div class="auto-calc-row">
+              <input type="checkbox" id="pickup-cost-auto" checked>
+              <label for="pickup-cost-auto">Auto-calculate from Fuel Calculator</label>
+            </div>
             <div class="var-row">
-              <div class="field"><label for="pickup">Pickup Charge — Cost ($)</label><input type="number" id="pickup" min="0" step="1" value="150"></div>
+              <div class="field"><label for="pickup">Pickup Charge — Cost ($)</label><input type="number" id="pickup" min="0" step="0.01" value="0"></div>
               <div class="field"><label for="pickup-margin">Margin</label>
                 <select id="pickup-margin">
                   <option value="40">40%</option><option value="45">45%</option><option value="50" selected>50%</option><option value="55">55%</option><option value="60">60%</option>
                 </select>
               </div>
             </div>
-            <p class="sell-preview">Sell price → <strong id="pickup-sell">$225.00</strong> <span class="internal-flag">(not shown to client)</span></p>
-            <div class="var-row" style="margin-top:12px;">
-              <div class="field">
-                <label for="pickup-fuel-area">Fuel Charge — Area</label>
-                <select id="pickup-fuel-area">
-                  <option value="60">A — $60.00</option>
-                  <option value="70">B — $70.00</option>
-                  <option value="80">C — $80.00</option>
-                  <option value="90">D — $90.00</option>
-                  <option value="105">E — $105.00</option>
-                  <option value="116">F — $116.00</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="pickup-fuel-pct">Fuel Surcharge %</label>
-                <input type="number" id="pickup-fuel-pct" min="0" step="0.1" value="0">
-              </div>
+            <p class="sell-preview">Sell price → <strong id="pickup-sell">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
+            <div class="fuel-summary-box">
+              <span class="fuel-summary-label">Fuel Charge</span>
+              <span class="fuel-summary-status" id="pickup-fuel-summary">—</span>
+              <button type="button" class="btn ghost small" id="pickupEditFuelBtn">Edit in Fuel Calculator →</button>
             </div>
-            <p class="charge-preview">Fuel Charge → <strong id="pickup-fuel-preview">$60.00</strong></p>
             <ul class="fee-list" style="margin-top:14px;">
               <li>
                 <label class="toggle"><input type="checkbox" class="switch" id="manpower-pickup-on"></label>
@@ -751,15 +762,19 @@
           </div>
 
           <div class="var-item">
+            <div class="auto-calc-row">
+              <input type="checkbox" id="airport-cost-auto" checked>
+              <label for="airport-cost-auto">Auto-calculate from Fuel Calculator (uses Pickup surcharge %)</label>
+            </div>
             <div class="var-row">
-              <div class="field"><label for="airportTransfer">Airport Transfer — Cost ($)</label><input type="number" id="airportTransfer" min="0" step="1" value="85"></div>
+              <div class="field"><label for="airportTransfer">Airport Transfer — Cost ($)</label><input type="number" id="airportTransfer" min="0" step="0.01" value="0"></div>
               <div class="field"><label for="airportTransfer-margin">Margin</label>
                 <select id="airportTransfer-margin">
                   <option value="40">40%</option><option value="45">45%</option><option value="50" selected>50%</option><option value="55">55%</option><option value="60">60%</option>
                 </select>
               </div>
             </div>
-            <p class="sell-preview">Sell price → <strong id="airportTransfer-sell">$127.50</strong> <span class="internal-flag">(not shown to client)</span></p>
+            <p class="sell-preview">Sell price → <strong id="airportTransfer-sell">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
           </div>
 
           <div class="var-item">
@@ -770,33 +785,24 @@
                 <button type="button" class="seg-btn" data-type="In Truck">In Truck</button>
               </div>
             </div>
+            <div class="auto-calc-row">
+              <input type="checkbox" id="delivery-cost-auto" checked>
+              <label for="delivery-cost-auto">Auto-calculate from Fuel Calculator</label>
+            </div>
             <div class="var-row">
-              <div class="field"><label for="delivery">Delivery Cost ($)</label><input type="number" id="delivery" min="0" step="1" value="175"></div>
+              <div class="field"><label for="delivery">Delivery Cost ($)</label><input type="number" id="delivery" min="0" step="0.01" value="0"></div>
               <div class="field"><label for="delivery-margin">Margin</label>
                 <select id="delivery-margin">
                   <option value="40">40%</option><option value="45">45%</option><option value="50" selected>50%</option><option value="55">55%</option><option value="60">60%</option>
                 </select>
               </div>
             </div>
-            <p class="sell-preview">Sell price → <strong id="delivery-sell">$262.50</strong> <span class="internal-flag">(not shown to client)</span></p>
-            <div class="var-row" style="margin-top:12px;">
-              <div class="field">
-                <label for="delivery-fuel-area">Fuel Charge — Area</label>
-                <select id="delivery-fuel-area">
-                  <option value="60">A — $60.00</option>
-                  <option value="70">B — $70.00</option>
-                  <option value="80">C — $80.00</option>
-                  <option value="90">D — $90.00</option>
-                  <option value="105">E — $105.00</option>
-                  <option value="116">F — $116.00</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="delivery-fuel-pct">Fuel Surcharge %</label>
-                <input type="number" id="delivery-fuel-pct" min="0" step="0.1" value="0">
-              </div>
+            <p class="sell-preview">Sell price → <strong id="delivery-sell">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
+            <div class="fuel-summary-box">
+              <span class="fuel-summary-label">Fuel Charge</span>
+              <span class="fuel-summary-status" id="delivery-fuel-summary">—</span>
+              <button type="button" class="btn ghost small" id="deliveryEditFuelBtn">Edit in Fuel Calculator →</button>
             </div>
-            <p class="charge-preview">Fuel Charge → <strong id="delivery-fuel-preview">$60.00</strong></p>
             <ul class="fee-list" style="margin-top:14px;">
               <li>
                 <label class="toggle"><input type="checkbox" class="switch" id="manpower-delivery-on"></label>
@@ -1031,6 +1037,132 @@
     </div>
   </section>
 
+  <section id="fuelView" hidden>
+    <datalist id="fuel-cities-list">
+      <option value="Agoura"><option value="Alhambra"><option value="Anaheim"><option value="Arcadia">
+      <option value="Arleta"><option value="Artesia"><option value="Azusa"><option value="Baldwin Hills">
+      <option value="Baldwin Park"><option value="Bel Air"><option value="Bell"><option value="Bellflower">
+      <option value="Bell Gardens"><option value="Beverly Hills"><option value="Boyle Heights"><option value="Brea">
+      <option value="Brentwood"><option value="Buena Park"><option value="Burbank"><option value="Calabasas">
+      <option value="Camarillo"><option value="Canoga Park"><option value="Carson"><option value="Century Park">
+      <option value="Cerritos"><option value="Chatsworth"><option value="Chino"><option value="Commerce">
+      <option value="City of Industry"><option value="Compton"><option value="Costa Mesa"><option value="Covina">
+      <option value="Cudahy"><option value="Culver City"><option value="Cypress"><option value="Diamond Bar">
+      <option value="Dominguez"><option value="Downey"><option value="Duarte"><option value="Eagle Rock">
+      <option value="El Monte"><option value="El Toro"><option value="El Segundo"><option value="Encino">
+      <option value="Flintridge"><option value="Fontana"><option value="Fountain Valley"><option value="Fullerton">
+      <option value="Gardena"><option value="Garden Grove"><option value="Glendale"><option value="Glendora">
+      <option value="Granada Hills"><option value="Hacienda Heights"><option value="Harbor City"><option value="Hawthorne">
+      <option value="Hermosa Beach"><option value="Highland Park"><option value="Hollywood"><option value="Huntington Beach">
+      <option value="Huntington Park"><option value="Inglewood"><option value="Irvine"><option value="Irwindale">
+      <option value="La Canada"><option value="La Crescenta"><option value="Laguna Hills"><option value="La Habra">
+      <option value="Laguna Niguel"><option value="Lakewood"><option value="Lawndale"><option value="La Mirada">
+      <option value="Lennox"><option value="Lomita"><option value="Long Beach"><option value="Los Alamitos">
+      <option value="Lynwood"><option value="Malibu"><option value="Manhattan Beach"><option value="Marina Del Rey">
+      <option value="Mar Vista"><option value="Maywood"><option value="Monrovia"><option value="Montclair">
+      <option value="Montebello"><option value="Monterey Park"><option value="Montrose"><option value="Newbury Park">
+      <option value="Newport Beach"><option value="North Hollywood"><option value="Norwalk"><option value="Ocean Park">
+      <option value="Oceanside"><option value="Ontario"><option value="Orange"><option value="Pacific Palisades">
+      <option value="Pacoima"><option value="Palos Verdes Estates"><option value="Panorama City"><option value="Paramount">
+      <option value="Pasadena"><option value="Pico Rivera"><option value="Placentia"><option value="Playa Del Rey">
+      <option value="Pomona"><option value="Redondo Beach"><option value="Reseda"><option value="Riverside">
+      <option value="Rosemead"><option value="Rowland Heights"><option value="San Bernardino"><option value="San Dimas">
+      <option value="San Fernando"><option value="San Gabriel"><option value="San Marino"><option value="San Pedro">
+      <option value="Santa Ana"><option value="Santa Monica"><option value="Saugus"><option value="Seal Beach">
+      <option value="Sepulveda"><option value="Sherman Oaks"><option value="Signal Hill"><option value="Sierra Madre">
+      <option value="Simi Valley"><option value="South El Monte"><option value="South Pasadena"><option value="Stanton">
+      <option value="Studio City"><option value="Sunland"><option value="Sun Valley"><option value="Sylmar">
+      <option value="Tarzana"><option value="Temple City"><option value="Terminal Island"><option value="Thousand Oaks">
+      <option value="Torrance"><option value="Tujunga"><option value="Universal City"><option value="Valencia">
+      <option value="Van Nuys"><option value="Venice"><option value="Vernon"><option value="Walnut">
+      <option value="Westminster"><option value="West Hills"><option value="West Hollywood"><option value="Whittier">
+      <option value="Wilmington"><option value="Woodland Hills"><option value="Yorba Linda">
+    </datalist>
+
+    <div class="cargo-head">
+      <h2>Fuel Calculator</h2>
+      <p>Enter the pickup and delivery cities to auto-calculate transport buying cost and fuel charge from the LA area rate sheet. Set an Area Override to override city matching — the override always wins. Costs auto-fill back into the Quote Builder unless you turn off the toggle there.</p>
+    </div>
+
+    <div class="block" style="margin-bottom:24px;">
+      <div class="block-head">
+        <h2>Pickup</h2>
+      </div>
+      <div class="field" style="margin-bottom:16px;">
+        <label for="fuel-pickup-city">City or ZIP</label>
+        <input type="text" id="fuel-pickup-city" list="fuel-cities-list" placeholder="e.g. Beverly Hills" autocomplete="off">
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label for="fuel-pickup-area-override">Area Override</label>
+          <select id="fuel-pickup-area-override">
+            <option value="auto">Auto (from city)</option>
+            <option value="A">A — $60.00 base</option>
+            <option value="B">B — $70.00 base</option>
+            <option value="C">C — $80.00 base</option>
+            <option value="D">D — $90.00 base</option>
+            <option value="E">E — $105.00 base</option>
+            <option value="F">F — $116.00 base</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="fuel-pickup-surcharge">Fuel Surcharge (%)</label>
+          <input type="number" id="fuel-pickup-surcharge" min="0" step="0.1" value="0">
+        </div>
+      </div>
+      <p class="fuel-match-note" id="fuel-pickup-note">Enter a city above or set a manual Area override.</p>
+      <div class="fuel-readout-grid">
+        <div class="weight-stat">
+          <span class="stat-label">Transport Cost <em>(buying)</em></span>
+          <span class="stat-value" id="fuel-pickup-buying-preview">$0.00</span>
+        </div>
+        <div class="weight-stat billable">
+          <span class="stat-label">Fuel Charge</span>
+          <span class="stat-value" id="fuel-pickup-charge-preview">$0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-head">
+        <h2>Delivery</h2>
+      </div>
+      <div class="field" style="margin-bottom:16px;">
+        <label for="fuel-delivery-city">City or ZIP</label>
+        <input type="text" id="fuel-delivery-city" list="fuel-cities-list" placeholder="e.g. Burbank" autocomplete="off">
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label for="fuel-delivery-area-override">Area Override</label>
+          <select id="fuel-delivery-area-override">
+            <option value="auto">Auto (from city)</option>
+            <option value="A">A — $60.00 base</option>
+            <option value="B">B — $70.00 base</option>
+            <option value="C">C — $80.00 base</option>
+            <option value="D">D — $90.00 base</option>
+            <option value="E">E — $105.00 base</option>
+            <option value="F">F — $116.00 base</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="fuel-delivery-surcharge">Fuel Surcharge (%)</label>
+          <input type="number" id="fuel-delivery-surcharge" min="0" step="0.1" value="0">
+        </div>
+      </div>
+      <p class="fuel-match-note" id="fuel-delivery-note">Enter a city above or set a manual Area override.</p>
+      <div class="fuel-readout-grid">
+        <div class="weight-stat">
+          <span class="stat-label">Transport Cost <em>(buying)</em></span>
+          <span class="stat-value" id="fuel-delivery-buying-preview">$0.00</span>
+        </div>
+        <div class="weight-stat billable">
+          <span class="stat-label">Fuel Charge</span>
+          <span class="stat-value" id="fuel-delivery-charge-preview">$0.00</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="historyView" hidden>
     <div class="history-head">
       <h2>Saved Quotes</h2>
@@ -1115,15 +1247,26 @@
     currentDeliveryTransport = t;
     document.querySelectorAll('#deliveryTransportType .seg-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.type === t); });
   }
-  function fuelCharge(areaSelectId, pctId){
-    var base = num(areaSelectId);
-    var pct = num(pctId);
-    return base * (1 + pct / 100);
+  function resolveFuelArea(city, override){
+    if(override && override !== 'auto') return override;
+    var key = (city || '').trim().toLowerCase();
+    return key ? (CITY_AREA_MAP[key] || null) : null;
   }
-  function fuelAreaLabel(areaSelectId){
-    var sel = document.getElementById(areaSelectId);
-    if(!sel) return '';
-    return sel.options[sel.selectedIndex].text.charAt(0);
+  function fuelBuyingCost(area, billableWt){
+    if(!area) return 0;
+    return billableWt * FUEL_AREA_RATE_PER_LB[area] + FUEL_AREA_BASE_RATE[area];
+  }
+  function fuelMatchNoteData(city, override, area){
+    if(override && override !== 'auto'){
+      return { text: 'Using manual Area ' + override + '.', cls: 'manual' };
+    }
+    var key = (city || '').trim().toLowerCase();
+    if(!key) return { text: 'Enter a city above or set a manual Area override.', cls: '' };
+    if(area){
+      var display = key.replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+      return { text: '“' + display + '” matched → Area ' + area + '.', cls: 'matched' };
+    }
+    return { text: 'No local-area match for “' + city + '” — set an Area override if this is a local job.', cls: 'no-match' };
   }
   function handleAirportCode(codeId, cityId, stateId){
     var code = document.getElementById(codeId).value.trim().toUpperCase();
@@ -1170,6 +1313,49 @@
   // ---------- Cargo Calculator (individual pieces, up to MAX_PIECES) ----------
   var MAX_PIECES = 25;
   var AIRFREIGHT_MIN_CHARGE = 350;
+
+  var FUEL_AREA_BASE_RATE = { A:60.00, B:70.00, C:80.00, D:90.00, E:105.00, F:116.00 };
+  var FUEL_AREA_RATE_PER_LB = { A:0.1003, B:0.1058, C:0.1089, D:0.1107, E:0.1189, F:0.1284 };
+  var CITY_AREA_MAP = {
+    'agoura':'D','alhambra':'B','anaheim':'C','arcadia':'D',
+    'arleta':'C','artesia':'B','azusa':'C','baldwin hills':'A',
+    'baldwin park':'B','bel air':'B','bell':'B','bellflower':'B',
+    'bell gardens':'B','beverly hills':'A','boyle heights':'B','brea':'C',
+    'brentwood':'A','buena park':'C','burbank':'B','calabasas':'E',
+    'camarillo':'F','canoga park':'C','carson':'B','century park':'A',
+    'cerritos':'C','chatsworth':'D','chino':'D','commerce':'C',
+    'city of industry':'C','compton':'A','costa mesa':'D','covina':'C',
+    'cudahy':'B','culver city':'A','cypress':'B','diamond bar':'D',
+    'dominguez':'A','downey':'B','duarte':'C','eagle rock':'B',
+    'el monte':'C','el toro':'E','el segundo':'A','encino':'B',
+    'flintridge':'C','fontana':'E','fountain valley':'C','fullerton':'C',
+    'gardena':'A','garden grove':'C','glendale':'C','glendora':'D',
+    'granada hills':'B','hacienda heights':'C','harbor city':'B','hawthorne':'A',
+    'hermosa beach':'A','highland park':'D','hollywood':'B','huntington beach':'D',
+    'huntington park':'D','inglewood':'A','irvine':'E','irwindale':'C',
+    'la canada':'D','la crescenta':'D','laguna hills':'B','la habra':'C',
+    'laguna niguel':'D','lakewood':'A','lawndale':'C','la mirada':'D',
+    'lennox':'B','lomita':'B','long beach':'C','los alamitos':'A',
+    'lynwood':'C','malibu':'C','manhattan beach':'A','marina del rey':'A',
+    'mar vista':'A','maywood':'A','monrovia':'D','montclair':'C',
+    'montebello':'C','monterey park':'D','montrose':'D','newbury park':'D',
+    'newport beach':'C','north hollywood':'B','norwalk':'B','ocean park':'A',
+    'oceanside':'F','ontario':'C','orange':'C','pacific palisades':'B',
+    'pacoima':'C','palos verdes estates':'B','panorama city':'B','paramount':'B',
+    'pasadena':'D','pico rivera':'C','placentia':'C','playa del rey':'A',
+    'pomona':'C','redondo beach':'A','reseda':'C','riverside':'E',
+    'rosemead':'C','rowland heights':'C','san bernardino':'F','san dimas':'D',
+    'san fernando':'C','san gabriel':'B','san marino':'C','san pedro':'B',
+    'santa ana':'C','santa monica':'A','saugus':'F','seal beach':'E',
+    'sepulveda':'B','sherman oaks':'C','signal hill':'B','sierra madre':'C',
+    'simi valley':'E','south el monte':'C','south pasadena':'C','stanton':'C',
+    'studio city':'B','sunland':'E','sun valley':'C','sylmar':'C',
+    'tarzana':'C','temple city':'C','terminal island':'B','thousand oaks':'D',
+    'torrance':'A','tujunga':'C','universal city':'B','valencia':'F',
+    'van nuys':'B','venice':'A','vernon':'B','walnut':'C',
+    'westminster':'C','west hills':'D','west hollywood':'A','whittier':'C',
+    'wilmington':'B','woodland hills':'C','yorba linda':'D'
+  };
 
   function pieceRowEl(vals){
     vals = vals || {};
@@ -1279,14 +1465,42 @@
     var handling = handlingOn ? num('fee-handling-amt') : 0;
     var standardSub = ctpat + tsa + handling;
 
+    var cargo = computeCargo();
+    var billableWt = cargo.billableWeight;
+
+    // Fuel Calculator
+    var fuelPickupCity = document.getElementById('fuel-pickup-city').value;
+    var fuelPickupOverride = document.getElementById('fuel-pickup-area-override').value;
+    var fuelPickupSurcharge = num('fuel-pickup-surcharge');
+    var fuelDeliveryCity = document.getElementById('fuel-delivery-city').value;
+    var fuelDeliveryOverride = document.getElementById('fuel-delivery-area-override').value;
+    var fuelDeliverySurcharge = num('fuel-delivery-surcharge');
+
+    var pickupArea = resolveFuelArea(fuelPickupCity, fuelPickupOverride);
+    var deliveryArea = resolveFuelArea(fuelDeliveryCity, fuelDeliveryOverride);
+
+    var pickupBuyingCost = fuelBuyingCost(pickupArea, billableWt);
+    var deliveryBuyingCost = fuelBuyingCost(deliveryArea, billableWt);
+
+    var pickupFuelAmt = pickupBuyingCost * (fuelPickupSurcharge / 100);
+    var deliveryFuelAmt = deliveryBuyingCost * (fuelDeliverySurcharge / 100);
+
+    // Airport Transfer auto-calc: 40 + wt*0.06, plus fuel floored at $10
+    var airportSubtotal = 40 + billableWt * 0.06;
+    var airportFuelCalc = Math.max(10, airportSubtotal * (fuelPickupSurcharge / 100));
+    var airportAutoValue = airportSubtotal + airportFuelCalc;
+
+    // Apply auto-calculate to cost inputs (programmatic; won't fire input events)
+    var pickupCostAuto = document.getElementById('pickup-cost-auto').checked;
+    var deliveryCostAuto = document.getElementById('delivery-cost-auto').checked;
+    var airportCostAuto = document.getElementById('airport-cost-auto').checked;
+    if(pickupCostAuto){ document.getElementById('pickup').value = pickupBuyingCost.toFixed(2); }
+    if(deliveryCostAuto){ document.getElementById('delivery').value = deliveryBuyingCost.toFixed(2); }
+    if(airportCostAuto){ document.getElementById('airportTransfer').value = airportAutoValue.toFixed(2); }
+
     var pickup = lineItem('pickup', 'pickup-margin');
     var airport = lineItem('airportTransfer', 'airportTransfer-margin');
     var delivery = lineItem('delivery', 'delivery-margin');
-
-    var pickupFuelAmt = fuelCharge('pickup-fuel-area', 'pickup-fuel-pct');
-    var pickupFuelArea = fuelAreaLabel('pickup-fuel-area');
-    var deliveryFuelAmt = fuelCharge('delivery-fuel-area', 'delivery-fuel-pct');
-    var deliveryFuelArea = fuelAreaLabel('delivery-fuel-area');
 
     var pickupLabel = 'Pickup (' + currentPickupTransport + ')';
     var deliveryLabel = 'Delivery (' + currentDeliveryTransport + ')';
@@ -1352,19 +1566,22 @@
 
     var refNumber = document.getElementById('refNumber').value.trim();
 
-    var cargo = computeCargo();
-
     return {
       recordId: quoteRecordId, refNumber: refNumber, date: quoteDateStr, jobType: currentJob,
       originLabel: originState ? (originCity + ', ' + originState) : originCity,
       destLabel: destState ? (destCity + ', ' + destState) : destCity,
       pieces: cargo.pieces, shipValue: num('shipValue'),
       shipmentType: cargo.shipmentType, divisor: cargo.divisor,
-      dimWeightTotal: cargo.dimWeightTotal, actualWeightTotal: cargo.actualWeightTotal, billableWeight: cargo.billableWeight,
+      dimWeightTotal: cargo.dimWeightTotal, actualWeightTotal: cargo.actualWeightTotal, billableWeight: billableWt,
       ctpat: ctpat, tsa: tsa, handling: handling, standardSub: standardSub,
-      pickup: pickup, pickupLabel: pickupLabel, pickupFuelAmt: pickupFuelAmt, pickupFuelArea: pickupFuelArea,
+      fuelPickupCity: fuelPickupCity, fuelPickupOverride: fuelPickupOverride, fuelPickupSurcharge: fuelPickupSurcharge,
+      fuelDeliveryCity: fuelDeliveryCity, fuelDeliveryOverride: fuelDeliveryOverride, fuelDeliverySurcharge: fuelDeliverySurcharge,
+      pickupArea: pickupArea, deliveryArea: deliveryArea,
+      pickupBuyingCost: pickupBuyingCost, deliveryBuyingCost: deliveryBuyingCost,
+      pickupCostAuto: pickupCostAuto, deliveryCostAuto: deliveryCostAuto, airportCostAuto: airportCostAuto,
+      pickup: pickup, pickupLabel: pickupLabel, pickupFuelAmt: pickupFuelAmt,
       airport: airport,
-      delivery: delivery, deliveryLabel: deliveryLabel, deliveryFuelAmt: deliveryFuelAmt, deliveryFuelArea: deliveryFuelArea,
+      delivery: delivery, deliveryLabel: deliveryLabel, deliveryFuelAmt: deliveryFuelAmt,
       groundSub: groundSub,
       carriage: carriage, carriageMode: currentCarriageMode, carriageLabel: carriageLabel, carriageMinApplied: carriageMinApplied,
       liftGatePickupOn: liftGatePickupOn, liftGatePickupFee: liftGatePickupFee, liftGatePickupAmt: liftGatePickupAmt,
@@ -1390,8 +1607,35 @@
     text('waiting-amt-inline', fmt(d.waitingAmt));
     text('std-pallet-preview', fmt(d.stdPalletAmt));
     text('dbl-pallet-preview', fmt(d.dblPalletAmt));
-    text('pickup-fuel-preview', fmt(d.pickupFuelAmt));
-    text('delivery-fuel-preview', fmt(d.deliveryFuelAmt));
+
+    // Fuel Calculator tab readouts
+    text('fuel-pickup-buying-preview', fmt(d.pickupBuyingCost));
+    text('fuel-pickup-charge-preview', fmt(d.pickupFuelAmt));
+    text('fuel-delivery-buying-preview', fmt(d.deliveryBuyingCost));
+    text('fuel-delivery-charge-preview', fmt(d.deliveryFuelAmt));
+
+    // Fuel match status notes on Fuel Calculator tab
+    var pNote = fuelMatchNoteData(d.fuelPickupCity, d.fuelPickupOverride, d.pickupArea);
+    var pNoteEl = document.getElementById('fuel-pickup-note');
+    pNoteEl.textContent = pNote.text;
+    pNoteEl.className = 'fuel-match-note' + (pNote.cls ? ' ' + pNote.cls : '');
+    var dNote = fuelMatchNoteData(d.fuelDeliveryCity, d.fuelDeliveryOverride, d.deliveryArea);
+    var dNoteEl = document.getElementById('fuel-delivery-note');
+    dNoteEl.textContent = dNote.text;
+    dNoteEl.className = 'fuel-match-note' + (dNote.cls ? ' ' + dNote.cls : '');
+
+    // Fuel summary boxes in Variable Service Charges
+    var pAreaLbl = d.pickupArea ? ('Area ' + d.pickupArea) : 'no area matched';
+    var pSrc = (d.fuelPickupOverride !== 'auto') ? 'manual override' : (d.pickupArea ? 'auto-matched' : 'unmatched');
+    text('pickup-fuel-summary', pAreaLbl + ' · ' + pSrc + ' · ' + fmt(d.pickupFuelAmt));
+    var dAreaLbl = d.deliveryArea ? ('Area ' + d.deliveryArea) : 'no area matched';
+    var dSrc = (d.fuelDeliveryOverride !== 'auto') ? 'manual override' : (d.deliveryArea ? 'auto-matched' : 'unmatched');
+    text('delivery-fuel-summary', dAreaLbl + ' · ' + dSrc + ' · ' + fmt(d.deliveryFuelAmt));
+
+    // Auto-calculate: disable cost inputs when auto is on
+    document.getElementById('pickup').disabled = d.pickupCostAuto;
+    document.getElementById('delivery').disabled = d.deliveryCostAuto;
+    document.getElementById('airportTransfer').disabled = d.airportCostAuto;
 
     document.getElementById('carriageCostLabel').textContent = d.carriageMode + ' Cost ($)';
     document.getElementById('airfreightServiceGroup').hidden = (d.carriageMode !== 'Airfreight');
@@ -1428,14 +1672,14 @@
 
     text('t-pickupLabel', d.pickupLabel);
     text('t-pickup', fmt(d.pickup.sell));
-    text('t-pickupFuelLabel', 'Fuel Charge – Pickup (Area ' + d.pickupFuelArea + ')');
+    text('t-pickupFuelLabel', 'Fuel Charge – Pickup' + (d.pickupArea ? ' (Area ' + d.pickupArea + ')' : ''));
     text('t-pickupFuel', fmt(d.pickupFuelAmt));
     text('t-airport', fmt(d.airport.sell));
     text('t-carriageLabel', d.carriageLabel);
     text('t-carriage', fmt(d.carriage.sell));
     text('t-deliveryLabel', d.deliveryLabel);
     text('t-delivery', fmt(d.delivery.sell));
-    text('t-deliveryFuelLabel', 'Fuel Charge – Delivery (Area ' + d.deliveryFuelArea + ')');
+    text('t-deliveryFuelLabel', 'Fuel Charge – Delivery' + (d.deliveryArea ? ' (Area ' + d.deliveryArea + ')' : ''));
     text('t-deliveryFuel', fmt(d.deliveryFuelAmt));
 
     var liftGatePickup = flatLine('Lift Gate – Pickup', d.liftGatePickupFee, d.liftGatePickupOn);
@@ -1488,8 +1732,8 @@
     var dblPallet = unitLine('Double Pallet', d.dblPalletRate, d.dblPalletQty, { suffix: '/pallet', noun: 'pallet' });
     var waiting = unitLine('Waiting Time', d.waitingRate, d.waitingHrs, { suffix: '/hr', noun: 'hr' });
     var overtime = flatLine('Overtime', d.overtimeFee, d.overtimeOn);
-    var fuelPickupLabel = 'Fuel Charge – Pickup (Area ' + d.pickupFuelArea + ')';
-    var fuelDeliveryLabel = 'Fuel Charge – Delivery (Area ' + d.deliveryFuelArea + ')';
+    var fuelPickupLabel = 'Fuel Charge – Pickup' + (d.pickupArea ? ' (Area ' + d.pickupArea + ')' : '');
+    var fuelDeliveryLabel = 'Fuel Charge – Delivery' + (d.deliveryArea ? ' (Area ' + d.deliveryArea + ')' : '');
     var rule = '-'.repeat(46);
     var lines = [];
     lines.push('FILM LOGIC — FREIGHT QUOTE');
@@ -1552,8 +1796,8 @@
     var dblPallet = unitLine('Double Pallet', d.dblPalletRate, d.dblPalletQty, { suffix: '/pallet', noun: 'pallet' });
     var waiting = unitLine('Waiting Time', d.waitingRate, d.waitingHrs, { suffix: '/hr', noun: 'hr' });
     var overtime = flatLine('Overtime', d.overtimeFee, d.overtimeOn);
-    var fuelPickupLabel = 'Fuel Charge – Pickup (Area ' + d.pickupFuelArea + ')';
-    var fuelDeliveryLabel = 'Fuel Charge – Delivery (Area ' + d.deliveryFuelArea + ')';
+    var fuelPickupLabel = 'Fuel Charge – Pickup' + (d.pickupArea ? ' (Area ' + d.pickupArea + ')' : '');
+    var fuelDeliveryLabel = 'Fuel Charge – Delivery' + (d.deliveryArea ? ' (Area ' + d.deliveryArea + ')' : '');
 
     var rows = '';
     rows += row('Handling', fmt(d.handling));
@@ -1699,13 +1943,18 @@
       feeHandlingOn: document.getElementById('fee-handling').checked, feeHandlingAmt: num('fee-handling-amt'),
       pickupTransportType: currentPickupTransport,
       pickup: num('pickup'), pickupMargin: intval('pickup-margin'),
-      pickupFuelArea: document.getElementById('pickup-fuel-area').value,
-      pickupFuelPct: num('pickup-fuel-pct'),
+      pickupCostAuto: document.getElementById('pickup-cost-auto').checked,
+      fuelPickupCity: document.getElementById('fuel-pickup-city').value,
+      fuelPickupAreaOverride: document.getElementById('fuel-pickup-area-override').value,
+      fuelPickupSurcharge: num('fuel-pickup-surcharge'),
       airportTransfer: num('airportTransfer'), airportTransferMargin: intval('airportTransfer-margin'),
+      airportCostAuto: document.getElementById('airport-cost-auto').checked,
       deliveryTransportType: currentDeliveryTransport,
       delivery: num('delivery'), deliveryMargin: intval('delivery-margin'),
-      deliveryFuelArea: document.getElementById('delivery-fuel-area').value,
-      deliveryFuelPct: num('delivery-fuel-pct'),
+      deliveryCostAuto: document.getElementById('delivery-cost-auto').checked,
+      fuelDeliveryCity: document.getElementById('fuel-delivery-city').value,
+      fuelDeliveryAreaOverride: document.getElementById('fuel-delivery-area-override').value,
+      fuelDeliverySurcharge: num('fuel-delivery-surcharge'),
       carriageMode: currentCarriageMode, airfreightService: currentAirfreightService,
       carriage: num('carriage'), carriageMargin: intval('carriage-margin'), carriageMarginManual: num('carriage-margin-manual'),
       liftGatePickupOn: document.getElementById('liftgate-pickup-on').checked, liftGatePickupAmt: num('liftgate-pickup-amt'),
@@ -1747,19 +1996,24 @@
     document.getElementById('fee-handling-amt').value = data.feeHandlingAmt != null ? data.feeHandlingAmt : 95;
 
     setPickupTransport(data.pickupTransportType || 'In Van');
+    document.getElementById('pickup-cost-auto').checked = data.pickupCostAuto != null ? !!data.pickupCostAuto : true;
     document.getElementById('pickup').value = data.pickup != null ? data.pickup : 0;
     document.getElementById('pickup-margin').value = data.pickupMargin != null ? data.pickupMargin : 50;
-    document.getElementById('pickup-fuel-area').value = data.pickupFuelArea != null ? data.pickupFuelArea : '60';
-    document.getElementById('pickup-fuel-pct').value = data.pickupFuelPct != null ? data.pickupFuelPct : 0;
+    document.getElementById('fuel-pickup-city').value = data.fuelPickupCity || '';
+    document.getElementById('fuel-pickup-area-override').value = data.fuelPickupAreaOverride || 'auto';
+    document.getElementById('fuel-pickup-surcharge').value = data.fuelPickupSurcharge != null ? data.fuelPickupSurcharge : 0;
 
+    document.getElementById('airport-cost-auto').checked = data.airportCostAuto != null ? !!data.airportCostAuto : true;
     document.getElementById('airportTransfer').value = data.airportTransfer != null ? data.airportTransfer : 0;
     document.getElementById('airportTransfer-margin').value = data.airportTransferMargin != null ? data.airportTransferMargin : 50;
 
     setDeliveryTransport(data.deliveryTransportType || 'In Van');
+    document.getElementById('delivery-cost-auto').checked = data.deliveryCostAuto != null ? !!data.deliveryCostAuto : true;
     document.getElementById('delivery').value = data.delivery != null ? data.delivery : 0;
     document.getElementById('delivery-margin').value = data.deliveryMargin != null ? data.deliveryMargin : 50;
-    document.getElementById('delivery-fuel-area').value = data.deliveryFuelArea != null ? data.deliveryFuelArea : '60';
-    document.getElementById('delivery-fuel-pct').value = data.deliveryFuelPct != null ? data.deliveryFuelPct : 0;
+    document.getElementById('fuel-delivery-city').value = data.fuelDeliveryCity || '';
+    document.getElementById('fuel-delivery-area-override').value = data.fuelDeliveryAreaOverride || 'auto';
+    document.getElementById('fuel-delivery-surcharge').value = data.fuelDeliverySurcharge != null ? data.fuelDeliverySurcharge : 0;
 
     setCarriageMode(data.carriageMode || 'Airfreight');
     setAirfreightService(data.airfreightService || 'General');
@@ -1893,8 +2147,8 @@
 
   // ---------- Tabs ----------
   function switchTab(tab){
-    var views = { builder: 'builderView', cargo: 'cargoView', history: 'historyView' };
-    var buttons = { builder: 'tabBuilderBtn', cargo: 'tabCargoBtn', history: 'tabHistoryBtn' };
+    var views = { builder: 'builderView', cargo: 'cargoView', fuel: 'fuelView', history: 'historyView' };
+    var buttons = { builder: 'tabBuilderBtn', cargo: 'tabCargoBtn', fuel: 'tabFuelBtn', history: 'tabHistoryBtn' };
     Object.keys(views).forEach(function(key){
       var isActive = key === tab;
       document.getElementById(views[key]).hidden = !isActive;
@@ -1965,10 +2219,12 @@
    'dangerous-goods-on','dangerous-goods-amt',
    'std-pallet-rate','std-pallet-qty','dbl-pallet-rate','dbl-pallet-qty',
    'waiting-rate','waiting-hrs','overtime-on','overtime-amt',
-   'pickup','pickup-margin','pickup-fuel-area','pickup-fuel-pct',
-   'airportTransfer','airportTransfer-margin',
+   'pickup-cost-auto','pickup','pickup-margin',
+   'airport-cost-auto','airportTransfer','airportTransfer-margin',
+   'delivery-cost-auto','delivery','delivery-margin',
    'carriage','carriage-margin','carriage-margin-manual',
-   'delivery','delivery-margin','delivery-fuel-area','delivery-fuel-pct',
+   'fuel-pickup-city','fuel-pickup-area-override','fuel-pickup-surcharge',
+   'fuel-delivery-city','fuel-delivery-area-override','fuel-delivery-surcharge',
    'originCity','originState','destCity','destState','shipValue','refNumber'
   ].forEach(function(id){
     var el = document.getElementById(id);
@@ -1985,11 +2241,22 @@
     document.getElementById('quoteForm').reset();
     setShipmentType('Domestic');
     setJobType('Door to Door');
+    setPickupTransport('In Van');
+    setDeliveryTransport('In Van');
     setCarriageMode('Airfreight');
     setAirfreightService('General');
     ['pickup-margin','airportTransfer-margin','carriage-margin','carriage-margin-manual','delivery-margin'].forEach(function(id){
       document.getElementById(id).value = '50';
     });
+    document.getElementById('pickup-cost-auto').checked = true;
+    document.getElementById('airport-cost-auto').checked = true;
+    document.getElementById('delivery-cost-auto').checked = true;
+    document.getElementById('fuel-pickup-city').value = '';
+    document.getElementById('fuel-pickup-area-override').value = 'auto';
+    document.getElementById('fuel-pickup-surcharge').value = '0';
+    document.getElementById('fuel-delivery-city').value = '';
+    document.getElementById('fuel-delivery-area-override').value = 'auto';
+    document.getElementById('fuel-delivery-surcharge').value = '0';
     seedDefaultPieces();
     stampHeader();
     render();
@@ -2009,13 +2276,18 @@
     setDeliveryTransport('In Van');
     setCarriageMode('Airfreight');
     setAirfreightService('General');
+    document.getElementById('pickup-cost-auto').checked = true;
     document.getElementById('pickup').value = '0';
-    document.getElementById('pickup-fuel-area').value = '60';
-    document.getElementById('pickup-fuel-pct').value = '0';
+    document.getElementById('airport-cost-auto').checked = true;
     document.getElementById('airportTransfer').value = '0';
+    document.getElementById('delivery-cost-auto').checked = true;
     document.getElementById('delivery').value = '0';
-    document.getElementById('delivery-fuel-area').value = '60';
-    document.getElementById('delivery-fuel-pct').value = '0';
+    document.getElementById('fuel-pickup-city').value = '';
+    document.getElementById('fuel-pickup-area-override').value = 'auto';
+    document.getElementById('fuel-pickup-surcharge').value = '0';
+    document.getElementById('fuel-delivery-city').value = '';
+    document.getElementById('fuel-delivery-area-override').value = 'auto';
+    document.getElementById('fuel-delivery-surcharge').value = '0';
     document.getElementById('carriage').value = '0';
     ['pickup-margin','airportTransfer-margin','carriage-margin','carriage-margin-manual','delivery-margin'].forEach(function(id){
       document.getElementById(id).value = '50';
@@ -2040,8 +2312,11 @@
   document.getElementById('saveBtn').addEventListener('click', saveQuote);
   document.getElementById('tabBuilderBtn').addEventListener('click', function(){ switchTab('builder'); });
   document.getElementById('tabCargoBtn').addEventListener('click', function(){ switchTab('cargo'); });
+  document.getElementById('tabFuelBtn').addEventListener('click', function(){ switchTab('fuel'); });
   document.getElementById('tabHistoryBtn').addEventListener('click', function(){ switchTab('history'); });
   document.getElementById('editCargoBtn').addEventListener('click', function(){ switchTab('cargo'); });
+  document.getElementById('pickupEditFuelBtn').addEventListener('click', function(){ switchTab('fuel'); });
+  document.getElementById('deliveryEditFuelBtn').addEventListener('click', function(){ switchTab('fuel'); });
 
   initTheme();
   stampHeader();
