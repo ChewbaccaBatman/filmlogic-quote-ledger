@@ -800,16 +800,18 @@
                 <button type="button" class="seg-btn" data-type="In Truck">In Truck</button>
               </div>
             </div>
+            <div class="auto-calc-row" style="margin-bottom:14px;">
+              <input type="checkbox" id="pickup-on">
+              <label for="pickup-on" style="font-weight:600;color:var(--ink);">This job includes a pickup</label>
+            </div>
             <div class="auto-calc-row">
               <input type="checkbox" id="pickup-cost-auto" checked>
               <label for="pickup-cost-auto">Auto-calculate from Fuel Calculator</label>
             </div>
             <div class="var-row">
               <div class="field"><label for="pickup">Pickup Charge — Cost ($)</label><input type="number" id="pickup" min="0" step="0.01" value="0"></div>
-              <div class="field"><label for="pickup-margin">Margin</label>
-                <select id="pickup-margin">
-                  <option value="40">40%</option><option value="45">45%</option><option value="50" selected>50%</option><option value="55">55%</option><option value="60">60%</option>
-                </select>
+              <div class="field"><label for="pickup-margin">Margin (%)</label>
+                <input type="number" id="pickup-margin" min="0" max="300" step="0.1" value="50">
               </div>
             </div>
             <p class="sell-preview">Sell price → <strong id="pickup-sell">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
@@ -834,7 +836,7 @@
 
           <div class="var-item">
             <div class="auto-calc-row" style="margin-bottom:14px;">
-              <input type="checkbox" id="airport-on" checked>
+              <input type="checkbox" id="airport-on">
               <label for="airport-on" style="font-weight:600;color:var(--ink);">This job includes an airport transfer</label>
             </div>
             <div class="auto-calc-row">
@@ -843,10 +845,8 @@
             </div>
             <div class="var-row">
               <div class="field"><label for="airportTransfer">Airport Transfer — Cost ($)</label><input type="number" id="airportTransfer" min="0" step="0.01" value="0"></div>
-              <div class="field"><label for="airportTransfer-margin">Margin</label>
-                <select id="airportTransfer-margin">
-                  <option value="40">40%</option><option value="45">45%</option><option value="50" selected>50%</option><option value="55">55%</option><option value="60">60%</option>
-                </select>
+              <div class="field"><label for="airportTransfer-margin">Margin (%)</label>
+                <input type="number" id="airportTransfer-margin" min="0" max="300" step="0.1" value="50">
               </div>
             </div>
             <p class="sell-preview">Sell price → <strong id="airportTransfer-sell">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
@@ -861,7 +861,7 @@
               </div>
             </div>
             <div class="auto-calc-row" style="margin-bottom:14px;">
-              <input type="checkbox" id="delivery-on" checked>
+              <input type="checkbox" id="delivery-on">
               <label for="delivery-on" style="font-weight:600;color:var(--ink);">This job includes a delivery</label>
             </div>
             <div class="auto-calc-row">
@@ -870,10 +870,8 @@
             </div>
             <div class="var-row">
               <div class="field"><label for="delivery">Delivery Cost ($)</label><input type="number" id="delivery" min="0" step="0.01" value="0"></div>
-              <div class="field"><label for="delivery-margin">Margin</label>
-                <select id="delivery-margin">
-                  <option value="40">40%</option><option value="45">45%</option><option value="50" selected>50%</option><option value="55">55%</option><option value="60">60%</option>
-                </select>
+              <div class="field"><label for="delivery-margin">Margin (%)</label>
+                <input type="number" id="delivery-margin" min="0" max="300" step="0.1" value="50">
               </div>
             </div>
             <p class="sell-preview">Sell price → <strong id="delivery-sell">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
@@ -921,25 +919,19 @@
           </div>
 
           <div class="auto-calc-row" style="margin-bottom:14px;margin-top:4px;">
-            <input type="checkbox" id="carriage-on" checked>
+            <input type="checkbox" id="carriage-on">
             <label for="carriage-on" style="font-weight:600;color:var(--ink);">Bill Main Carriage on this quote</label>
           </div>
 
           <div class="var-item" style="margin-top:0;">
             <div class="var-row">
-              <div class="field"><label for="carriage" id="carriageCostLabel">Airfreight Cost ($)</label><input type="number" id="carriage" min="0" step="1" value="2200"></div>
-              <div class="field" id="carriageMarginSelectField"><label for="carriage-margin">Margin</label>
-                <select id="carriage-margin">
-                  <option value="40">40%</option><option value="45">45%</option><option value="50" selected>50%</option><option value="55">55%</option><option value="60">60%</option>
-                </select>
-              </div>
-              <div class="field" id="carriageMarginManualField" hidden><label for="carriage-margin-manual">Margin (%)</label>
-                <input type="number" id="carriage-margin-manual" min="0" max="500" step="0.1" value="50">
+              <div class="field"><label for="carriage" id="carriageCostLabel">Airfreight Cost ($)</label><input type="number" id="carriage" min="0" step="1" value="0"></div>
+              <div class="field"><label for="carriage-margin">Margin (%)</label>
+                <input type="number" id="carriage-margin" min="0" max="300" step="0.1" value="50">
               </div>
             </div>
-            <p class="section-note" id="carriageMarginManualNote" hidden>Dedicated Truck margin is entered manually here for finer control over that leg's profit.</p>
             <p class="section-note" id="carriageMinNote">Airfreight carries a $350 minimum charge — if cost plus margin comes in under that, the minimum is applied automatically.</p>
-            <p class="sell-preview">Sell price → <strong id="carriage-sell">$3,300.00</strong> <span class="internal-flag" id="carriage-min-flag" hidden>($350 minimum applied)</span> <span class="internal-flag">(not shown to client)</span></p>
+            <p class="sell-preview">Sell price → <strong id="carriage-sell">$0.00</strong> <span class="internal-flag" id="carriage-min-flag" hidden>($350 minimum applied)</span> <span class="internal-flag">(not shown to client)</span></p>
           </div>
         </section>
 
@@ -959,6 +951,10 @@
             </ul>
           </div>
 
+          <div class="auto-calc-row" style="margin-bottom:14px;">
+            <input type="checkbox" id="stdpallet-on">
+            <label for="stdpallet-on" style="font-weight:600;color:var(--ink);">Bill Standard Pallet on this quote</label>
+          </div>
           <div class="var-item">
             <div class="var-row">
               <div class="field"><label for="std-pallet-rate">Standard Pallet — Rate ($/pallet)</label><input type="number" id="std-pallet-rate" min="0" step="0.01" value="65"></div>
@@ -967,6 +963,10 @@
             <p class="charge-preview">Charge → <strong id="std-pallet-preview">$0.00</strong></p>
           </div>
 
+          <div class="auto-calc-row" style="margin-bottom:14px;">
+            <input type="checkbox" id="dblpallet-on">
+            <label for="dblpallet-on" style="font-weight:600;color:var(--ink);">Bill Double Pallet on this quote</label>
+          </div>
           <div class="var-item">
             <div class="var-row">
               <div class="field"><label for="dbl-pallet-rate">Double Pallet — Rate ($/pallet)</label><input type="number" id="dbl-pallet-rate" min="0" step="0.01" value="85"></div>
@@ -982,6 +982,10 @@
             <p class="section-note">Billed only if they occur — shown to the client as a heads-up either way.</p>
           </div>
 
+          <div class="auto-calc-row" style="margin-bottom:14px;">
+            <input type="checkbox" id="waiting-on">
+            <label for="waiting-on" style="font-weight:600;color:var(--ink);">Bill Waiting Time on this quote</label>
+          </div>
           <div class="var-item">
             <div class="var-row">
               <div class="field"><label for="waiting-rate">Waiting Time — Rate ($/hr)</label><input type="number" id="waiting-rate" min="0" step="0.01" value="65"></div>
@@ -1173,7 +1177,7 @@
         </div>
       </div>
       <div class="auto-calc-row" style="margin-top:12px;">
-        <input type="checkbox" id="bill-fuel-pickup" checked>
+        <input type="checkbox" id="bill-fuel-pickup">
         <label for="bill-fuel-pickup">Bill Fuel Charge for Pickup</label>
       </div>
       <p class="fuel-match-note" id="fuel-pickup-note">Enter a city above or set a manual Area override.</p>
@@ -1216,7 +1220,7 @@
         </div>
       </div>
       <div class="auto-calc-row" style="margin-top:12px;">
-        <input type="checkbox" id="bill-fuel-delivery" checked>
+        <input type="checkbox" id="bill-fuel-delivery">
         <label for="bill-fuel-delivery">Bill Fuel Charge for Delivery</label>
       </div>
       <p class="fuel-match-note" id="fuel-delivery-note">Enter a city above or set a manual Area override.</p>
@@ -1367,10 +1371,8 @@
     return { cost: cost, margin: margin, sell: sell };
   }
 
-  // Dedicated Truck uses a manually-typed margin for finer control; the
-  // other carriage modes keep the preset 40–60% select.
   function carriageMarginId(){
-    return currentCarriageMode === 'Dedicated Truck' ? 'carriage-margin-manual' : 'carriage-margin';
+    return 'carriage-margin';
   }
 
   // A flat contingent fee (Overtime, Lift Gate, Man Power): the amount is
@@ -1547,11 +1549,15 @@
     var handling = handlingOn ? num('fee-handling-amt') : 0;
     var standardSub = ctpat + tsa + handling;
 
+    var pickupOn = document.getElementById('pickup-on').checked;
     var deliveryOn = document.getElementById('delivery-on').checked;
     var airportOn = document.getElementById('airport-on').checked;
     var carriageOn = document.getElementById('carriage-on').checked;
     var fuelPickupBillOn = document.getElementById('bill-fuel-pickup').checked;
     var fuelDeliveryBillOn = document.getElementById('bill-fuel-delivery').checked;
+    var stdPalletOn = document.getElementById('stdpallet-on').checked;
+    var dblPalletOn = document.getElementById('dblpallet-on').checked;
+    var waitingOn = document.getElementById('waiting-on').checked;
 
     var cargo = computeCargo();
     var billableWt = cargo.billableWeight;
@@ -1593,11 +1599,12 @@
     var pickupLabel = 'Pickup (' + currentPickupTransport + ')';
     var deliveryLabel = 'Delivery (' + currentDeliveryTransport + ')';
 
-    var pickupFuelAmtEff = fuelPickupBillOn ? pickupFuelAmt : 0;
+    var pickupFuelAmtEff = (pickupOn && fuelPickupBillOn) ? pickupFuelAmt : 0;
     var deliveryFuelAmtEff = (deliveryOn && fuelDeliveryBillOn) ? deliveryFuelAmt : 0;
+    var pickupSell = pickupOn ? pickup.sell : 0;
     var deliverySell = deliveryOn ? delivery.sell : 0;
     var airportSell = airportOn ? airport.sell : 0;
-    var groundSub = pickup.sell + pickupFuelAmtEff + airportSell + deliverySell + deliveryFuelAmtEff;
+    var groundSub = pickupSell + pickupFuelAmtEff + airportSell + deliverySell + deliveryFuelAmtEff;
 
     var carriage = lineItem('carriage', carriageMarginId());
     var carriageMinApplied = false;
@@ -1673,7 +1680,7 @@
       pickupBuyingCost: pickupBuyingCost, deliveryBuyingCost: deliveryBuyingCost,
       pickupCostAuto: pickupCostAuto, deliveryCostAuto: deliveryCostAuto, airportCostAuto: airportCostAuto,
       pickup: pickup, pickupLabel: pickupLabel, pickupFuelAmt: pickupFuelAmt,
-      fuelPickupBillOn: fuelPickupBillOn, fuelDeliveryBillOn: fuelDeliveryBillOn,
+      pickupOn: pickupOn, fuelPickupBillOn: fuelPickupBillOn, fuelDeliveryBillOn: fuelDeliveryBillOn,
       deliveryOn: deliveryOn, airportOn: airportOn, carriageOn: carriageOn,
       airport: airport,
       delivery: delivery, deliveryLabel: deliveryLabel, deliveryFuelAmt: deliveryFuelAmt,
@@ -1684,9 +1691,9 @@
       manPowerPickupOn: manPowerPickupOn, manPowerPickupFee: manPowerPickupFee, manPowerPickupAmt: manPowerPickupAmt,
       manPowerDeliveryOn: manPowerDeliveryOn, manPowerDeliveryFee: manPowerDeliveryFee, manPowerDeliveryAmt: manPowerDeliveryAmt,
       dangerousGoodsOn: dangerousGoodsOn, dangerousGoodsFee: dangerousGoodsFee, dangerousGoodsAmt: dangerousGoodsAmt,
-      stdPalletRate: stdPalletRate, stdPalletQty: stdPalletQty, stdPalletAmt: stdPalletAmt,
-      dblPalletRate: dblPalletRate, dblPalletQty: dblPalletQty, dblPalletAmt: dblPalletAmt,
-      waitingRate: waitingRate, waitingHrs: waitingHrs, waitingAmt: waitingAmt,
+      stdPalletOn: stdPalletOn, stdPalletRate: stdPalletRate, stdPalletQty: stdPalletQty, stdPalletAmt: stdPalletAmt,
+      dblPalletOn: dblPalletOn, dblPalletRate: dblPalletRate, dblPalletQty: dblPalletQty, dblPalletAmt: dblPalletAmt,
+      waitingOn: waitingOn, waitingRate: waitingRate, waitingHrs: waitingHrs, waitingAmt: waitingAmt,
       overtimeOn: overtimeOn, overtimeFee: overtimeFee, overtimeAmt: overtimeAmt
     };
   }
@@ -1698,24 +1705,24 @@
       handling:        { label:'Handling',               amount:d.handling,           billable:d.handlingOn },
       ctpat:           { label:'CTPAT Fee',               amount:d.ctpat,              billable:d.ctpatOn },
       tsa:             { label:'TSA Cyber Security Fee',  amount:d.tsa,                billable:d.tsaOn },
-      pickup:          { label:d.pickupLabel,             amount:d.pickup.sell,        billable:true },
-      pickupFuel:      { label:'Fuel Charge (Pickup)',    amount:d.pickupFuelAmt,      billable:true,  show:d.fuelPickupBillOn },
-      liftgatePickup:  { label:'Lift Gate – Pickup', amount:d.liftGatePickupFee,  billable:d.liftGatePickupOn },
-      manpowerPickup:  { label:'Man Power – Pickup', amount:d.manPowerPickupFee,  billable:d.manPowerPickupOn },
+      pickup:          { label:d.pickupLabel,             amount:d.pickup.sell,        billable:true, show:d.pickupOn },
+      pickupFuel:      { label:'Fuel Charge (Pickup)',    amount:d.pickupFuelAmt,      billable:true,  show:d.pickupOn && d.fuelPickupBillOn },
+      liftgatePickup:  { label:'Lift Gate – Pickup', amount:d.liftGatePickupFee,  billable:d.liftGatePickupOn, show:d.liftGatePickupOn },
+      manpowerPickup:  { label:'Man Power – Pickup', amount:d.manPowerPickupFee,  billable:d.manPowerPickupOn, show:d.manPowerPickupOn },
       airport:         { label:'Airport Transfer',       amount:d.airport.sell,       billable:true, show:d.airportOn },
       carriage:        { label:d.carriageLabel,          amount:d.carriage.sell,      billable:true, show:d.carriageOn },
       delivery:        { label:d.deliveryLabel,          amount:d.delivery.sell,      billable:true,  show:d.deliveryOn },
       deliveryFuel:    { label:'Fuel Charge (Delivery)', amount:d.deliveryFuelAmt,    billable:true,  show:d.deliveryOn && d.fuelDeliveryBillOn },
-      liftgateDelivery:{ label:'Lift Gate – Delivery', amount:d.liftGateDeliveryFee, billable:d.liftGateDeliveryOn, show:d.deliveryOn },
-      manpowerDelivery:{ label:'Man Power – Delivery', amount:d.manPowerDeliveryFee, billable:d.manPowerDeliveryOn, show:d.deliveryOn },
+      liftgateDelivery:{ label:'Lift Gate – Delivery', amount:d.liftGateDeliveryFee, billable:d.liftGateDeliveryOn, show:d.deliveryOn && d.liftGateDeliveryOn },
+      manpowerDelivery:{ label:'Man Power – Delivery', amount:d.manPowerDeliveryFee, billable:d.manPowerDeliveryOn, show:d.deliveryOn && d.manPowerDeliveryOn },
       dangerousGoods:  { label:'Dangerous Goods Fee',    amount:d.dangerousGoodsFee,  billable:d.dangerousGoodsOn },
       stdPallet:       { label:d.stdPalletQty > 0 ? 'Standard Pallet \xd7 ' + d.stdPalletQty : 'Standard Pallet',
-                         amount:d.stdPalletAmt, billable:d.stdPalletQty > 0 },
+                         amount:d.stdPalletAmt, billable:d.stdPalletQty > 0, show:d.stdPalletOn },
       dblPallet:       { label:d.dblPalletQty > 0 ? 'Double Pallet \xd7 ' + d.dblPalletQty : 'Double Pallet',
-                         amount:d.dblPalletAmt, billable:d.dblPalletQty > 0 },
+                         amount:d.dblPalletAmt, billable:d.dblPalletQty > 0, show:d.dblPalletOn },
       waiting:         { label:d.waitingHrs > 0 ? 'Waiting Time (' + d.waitingHrs + ' hr)' : 'Waiting Time',
-                         amount:d.waitingHrs > 0 ? d.waitingAmt : d.waitingRate, billable:d.waitingHrs > 0 },
-      overtime:        { label:'Overtime',               amount:d.overtimeFee,        billable:d.overtimeOn },
+                         amount:d.waitingHrs > 0 ? d.waitingAmt : d.waitingRate, billable:d.waitingHrs > 0, show:d.waitingOn },
+      overtime:        { label:'Overtime',               amount:d.overtimeFee,        billable:d.overtimeOn, show:d.overtimeOn },
     };
 
     var lines = [];
@@ -1887,7 +1894,9 @@
     text('delivery-fuel-summary', dAreaLbl + ' · ' + dSrc + ' · ' + fmt(d.deliveryFuelAmt));
 
     // Auto-calculate: disable cost inputs when auto is on
-    document.getElementById('pickup').disabled = d.pickupCostAuto;
+    document.getElementById('pickup').disabled = !d.pickupOn || d.pickupCostAuto;
+    document.getElementById('pickup-margin').disabled = !d.pickupOn;
+    document.getElementById('pickup-cost-auto').disabled = !d.pickupOn;
     document.getElementById('delivery').disabled = !d.deliveryOn || d.deliveryCostAuto;
     document.getElementById('delivery-margin').disabled = !d.deliveryOn;
     document.getElementById('delivery-cost-auto').disabled = !d.deliveryOn;
@@ -1899,14 +1908,15 @@
     document.getElementById('airfreightServiceGroup').hidden = (d.carriageMode !== 'Airfreight');
     document.getElementById('carriage').disabled = !d.carriageOn;
     document.getElementById('carriage-margin').disabled = !d.carriageOn;
-    document.getElementById('carriage-margin-manual').disabled = !d.carriageOn;
-
-    var manualMargin = d.carriageMode === 'Dedicated Truck';
-    document.getElementById('carriageMarginSelectField').hidden = manualMargin;
-    document.getElementById('carriageMarginManualField').hidden = !manualMargin;
-    document.getElementById('carriageMarginManualNote').hidden = !manualMargin;
     document.getElementById('carriageMinNote').hidden = !d.carriageOn || d.carriageMode !== 'Airfreight';
     document.getElementById('carriage-min-flag').hidden = !d.carriageMinApplied;
+
+    document.getElementById('std-pallet-rate').disabled = !d.stdPalletOn;
+    document.getElementById('std-pallet-qty').disabled = !d.stdPalletOn;
+    document.getElementById('dbl-pallet-rate').disabled = !d.dblPalletOn;
+    document.getElementById('dbl-pallet-qty').disabled = !d.dblPalletOn;
+    document.getElementById('waiting-rate').disabled = !d.waitingOn;
+    document.getElementById('waiting-hrs').disabled = !d.waitingOn;
 
     text('quoteRef', d.refNumber ? ('Ref: ' + d.refNumber) : '');
 
@@ -2251,28 +2261,32 @@
       feeTsaOn: document.getElementById('fee-tsa').checked, feeTsaAmt: num('fee-tsa-amt'),
       feeHandlingOn: document.getElementById('fee-handling').checked, feeHandlingAmt: num('fee-handling-amt'),
       pickupTransportType: currentPickupTransport,
-      pickup: num('pickup'), pickupMargin: intval('pickup-margin'),
+      pickupOn: document.getElementById('pickup-on').checked,
+      pickup: num('pickup'), pickupMargin: num('pickup-margin'),
       pickupCostAuto: document.getElementById('pickup-cost-auto').checked,
       fuelPickupCity: document.getElementById('fuel-pickup-city').value,
       fuelPickupAreaOverride: document.getElementById('fuel-pickup-area-override').value,
       fuelPickupSurcharge: num('fuel-pickup-surcharge'),
-      airportTransfer: num('airportTransfer'), airportTransferMargin: intval('airportTransfer-margin'),
+      airportTransfer: num('airportTransfer'), airportTransferMargin: num('airportTransfer-margin'),
       airportCostAuto: document.getElementById('airport-cost-auto').checked,
       deliveryTransportType: currentDeliveryTransport,
-      delivery: num('delivery'), deliveryMargin: intval('delivery-margin'),
+      delivery: num('delivery'), deliveryMargin: num('delivery-margin'),
       deliveryCostAuto: document.getElementById('delivery-cost-auto').checked,
       fuelDeliveryCity: document.getElementById('fuel-delivery-city').value,
       fuelDeliveryAreaOverride: document.getElementById('fuel-delivery-area-override').value,
       fuelDeliverySurcharge: num('fuel-delivery-surcharge'),
       carriageMode: currentCarriageMode, airfreightService: currentAirfreightService,
-      carriage: num('carriage'), carriageMargin: intval('carriage-margin'), carriageMarginManual: num('carriage-margin-manual'),
+      carriage: num('carriage'), carriageMargin: num('carriage-margin'),
       liftGatePickupOn: document.getElementById('liftgate-pickup-on').checked, liftGatePickupAmt: num('liftgate-pickup-amt'),
       liftGateDeliveryOn: document.getElementById('liftgate-delivery-on').checked, liftGateDeliveryAmt: num('liftgate-delivery-amt'),
       manPowerPickupOn: document.getElementById('manpower-pickup-on').checked, manPowerPickupAmt: num('manpower-pickup-amt'),
       manPowerDeliveryOn: document.getElementById('manpower-delivery-on').checked, manPowerDeliveryAmt: num('manpower-delivery-amt'),
       dangerousGoodsOn: document.getElementById('dangerous-goods-on').checked, dangerousGoodsAmt: num('dangerous-goods-amt'),
+      stdPalletOn: document.getElementById('stdpallet-on').checked,
       stdPalletRate: num('std-pallet-rate'), stdPalletQty: num('std-pallet-qty'),
+      dblPalletOn: document.getElementById('dblpallet-on').checked,
       dblPalletRate: num('dbl-pallet-rate'), dblPalletQty: num('dbl-pallet-qty'),
+      waitingOn: document.getElementById('waiting-on').checked,
       waitingRate: num('waiting-rate'), waitingHrs: num('waiting-hrs'),
       overtimeOn: document.getElementById('overtime-on').checked, overtimeAmt: num('overtime-amt'),
       deliveryOn: document.getElementById('delivery-on').checked,
@@ -2314,6 +2328,7 @@
     document.getElementById('fee-handling-amt').value = data.feeHandlingAmt != null ? data.feeHandlingAmt : 95;
 
     setPickupTransport(data.pickupTransportType || 'In Van');
+    document.getElementById('pickup-on').checked = data.pickupOn !== undefined ? !!data.pickupOn : true;
     document.getElementById('pickup-cost-auto').checked = data.pickupCostAuto != null ? !!data.pickupCostAuto : true;
     document.getElementById('pickup').value = data.pickup != null ? data.pickup : 0;
     document.getElementById('pickup-margin').value = data.pickupMargin != null ? data.pickupMargin : 50;
@@ -2336,8 +2351,7 @@
     setCarriageMode(data.carriageMode || 'Airfreight');
     setAirfreightService(data.airfreightService || 'General');
     document.getElementById('carriage').value = data.carriage != null ? data.carriage : 0;
-    document.getElementById('carriage-margin').value = data.carriageMargin != null ? data.carriageMargin : 50;
-    document.getElementById('carriage-margin-manual').value = data.carriageMarginManual != null ? data.carriageMarginManual : 50;
+    document.getElementById('carriage-margin').value = data.carriageMargin != null ? data.carriageMargin : (data.carriageMarginManual != null ? data.carriageMarginManual : 50);
 
     // split liftgate — backwards compat: old records had a single liftGateOn/Amt
     document.getElementById('liftgate-pickup-on').checked = data.liftGatePickupOn != null ? !!data.liftGatePickupOn : !!data.liftGateOn;
@@ -2374,6 +2388,9 @@
     document.getElementById('carriage-on').checked = data.carriageOn !== undefined ? !!data.carriageOn : true;
     document.getElementById('bill-fuel-pickup').checked = data.billFuelPickup !== undefined ? !!data.billFuelPickup : true;
     document.getElementById('bill-fuel-delivery').checked = data.billFuelDelivery !== undefined ? !!data.billFuelDelivery : true;
+    document.getElementById('stdpallet-on').checked = data.stdPalletOn !== undefined ? !!data.stdPalletOn : false;
+    document.getElementById('dblpallet-on').checked = data.dblPalletOn !== undefined ? !!data.dblPalletOn : false;
+    document.getElementById('waiting-on').checked = data.waitingOn !== undefined ? !!data.waitingOn : false;
 
     quoteRecordId = recordId || makeRecordId();
     quoteDateStr = data.quoteDate || quoteDateStr;
@@ -2551,11 +2568,12 @@
    'pickup-cost-auto','pickup','pickup-margin',
    'airport-cost-auto','airportTransfer','airportTransfer-margin',
    'delivery-cost-auto','delivery','delivery-margin',
-   'carriage','carriage-margin','carriage-margin-manual',
+   'carriage','carriage-margin',
    'fuel-pickup-city','fuel-pickup-area-override','fuel-pickup-surcharge',
    'fuel-delivery-city','fuel-delivery-area-override','fuel-delivery-surcharge',
    'originCity','originState','destCity','destState','shipValue','refNumber',
-   'delivery-on','airport-on','carriage-on','bill-fuel-pickup','bill-fuel-delivery'
+   'pickup-on','delivery-on','airport-on','carriage-on','bill-fuel-pickup','bill-fuel-delivery',
+   'stdpallet-on','dblpallet-on','waiting-on'
   ].forEach(function(id){
     var el = document.getElementById(id);
     el.addEventListener('input', render);
@@ -2575,7 +2593,7 @@
     setDeliveryTransport('In Van');
     setCarriageMode('Airfreight');
     setAirfreightService('General');
-    ['pickup-margin','airportTransfer-margin','carriage-margin','carriage-margin-manual','delivery-margin'].forEach(function(id){
+    ['pickup-margin','airportTransfer-margin','carriage-margin','delivery-margin'].forEach(function(id){
       document.getElementById(id).value = '50';
     });
     document.getElementById('pickup-cost-auto').checked = true;
@@ -2587,11 +2605,16 @@
     document.getElementById('fuel-delivery-city').value = '';
     document.getElementById('fuel-delivery-area-override').value = 'auto';
     document.getElementById('fuel-delivery-surcharge').value = '0';
-    document.getElementById('delivery-on').checked = true;
-    document.getElementById('airport-on').checked = true;
-    document.getElementById('carriage-on').checked = true;
-    document.getElementById('bill-fuel-pickup').checked = true;
-    document.getElementById('bill-fuel-delivery').checked = true;
+    document.getElementById('pickup-on').checked = false;
+    document.getElementById('delivery-on').checked = false;
+    document.getElementById('airport-on').checked = false;
+    document.getElementById('carriage-on').checked = false;
+    document.getElementById('bill-fuel-pickup').checked = false;
+    document.getElementById('bill-fuel-delivery').checked = false;
+    document.getElementById('stdpallet-on').checked = false;
+    document.getElementById('dblpallet-on').checked = false;
+    document.getElementById('waiting-on').checked = false;
+    document.getElementById('carriage').value = '0';
     ticketOrder = DEFAULT_TICKET_ORDER.slice();
     ticketOverrides = {};
     customLines = [];
@@ -2629,7 +2652,7 @@
     document.getElementById('fuel-delivery-area-override').value = 'auto';
     document.getElementById('fuel-delivery-surcharge').value = '0';
     document.getElementById('carriage').value = '0';
-    ['pickup-margin','airportTransfer-margin','carriage-margin','carriage-margin-manual','delivery-margin'].forEach(function(id){
+    ['pickup-margin','airportTransfer-margin','carriage-margin','delivery-margin'].forEach(function(id){
       document.getElementById(id).value = '50';
     });
     document.getElementById('manpower-pickup-on').checked = false;
@@ -2641,11 +2664,15 @@
     document.getElementById('std-pallet-qty').value = '0';
     document.getElementById('dbl-pallet-qty').value = '0';
     document.getElementById('waiting-hrs').value = '0';
-    document.getElementById('delivery-on').checked = true;
-    document.getElementById('airport-on').checked = true;
-    document.getElementById('carriage-on').checked = true;
-    document.getElementById('bill-fuel-pickup').checked = true;
-    document.getElementById('bill-fuel-delivery').checked = true;
+    document.getElementById('pickup-on').checked = false;
+    document.getElementById('delivery-on').checked = false;
+    document.getElementById('airport-on').checked = false;
+    document.getElementById('carriage-on').checked = false;
+    document.getElementById('bill-fuel-pickup').checked = false;
+    document.getElementById('bill-fuel-delivery').checked = false;
+    document.getElementById('stdpallet-on').checked = false;
+    document.getElementById('dblpallet-on').checked = false;
+    document.getElementById('waiting-on').checked = false;
     ticketOrder = DEFAULT_TICKET_ORDER.slice();
     ticketOverrides = {};
     customLines = [];
