@@ -687,7 +687,7 @@
   .fuel-summary-label{ font-weight:600; color:var(--ink); flex:none; }
   .fuel-summary-status{ flex:1; min-width:0; font-family:'IBM Plex Mono', monospace; font-size:.82rem; font-variant-numeric:tabular-nums; }
   .auto-calc-row{ display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:.82rem; color:var(--ink-soft); }
-  .auto-calc-row input[type="checkbox"]{ width:16px; height:16px; cursor:pointer; accent-color:var(--teal); flex:none; }
+  .auto-calc-row .toggle{ flex:none; }
   .auto-calc-row label{ cursor:pointer; }
   .fuel-match-note{ margin:10px 0 0; font-size:.82rem; color:var(--ink-soft); }
   .fuel-match-note.matched{ color:var(--teal); font-weight:500; }
@@ -801,11 +801,11 @@
               </div>
             </div>
             <div class="auto-calc-row" style="margin-bottom:14px;">
-              <input type="checkbox" id="pickup-on">
+              <label class="toggle"><input type="checkbox" class="switch" id="pickup-on"></label>
               <label for="pickup-on" style="font-weight:600;color:var(--ink);">This job includes a pickup</label>
             </div>
             <div class="auto-calc-row">
-              <input type="checkbox" id="pickup-cost-auto" checked>
+              <label class="toggle"><input type="checkbox" class="switch" id="pickup-cost-auto" checked></label>
               <label for="pickup-cost-auto">Auto-calculate from Fuel Calculator</label>
             </div>
             <div class="var-row">
@@ -836,11 +836,11 @@
 
           <div class="var-item">
             <div class="auto-calc-row" style="margin-bottom:14px;">
-              <input type="checkbox" id="airport-on">
+              <label class="toggle"><input type="checkbox" class="switch" id="airport-on"></label>
               <label for="airport-on" style="font-weight:600;color:var(--ink);">This job includes an airport transfer</label>
             </div>
             <div class="auto-calc-row">
-              <input type="checkbox" id="airport-cost-auto" checked>
+              <label class="toggle"><input type="checkbox" class="switch" id="airport-cost-auto" checked></label>
               <label for="airport-cost-auto">Auto-calculate from Fuel Calculator (uses Pickup surcharge %)</label>
             </div>
             <div class="var-row">
@@ -861,11 +861,11 @@
               </div>
             </div>
             <div class="auto-calc-row" style="margin-bottom:14px;">
-              <input type="checkbox" id="delivery-on">
+              <label class="toggle"><input type="checkbox" class="switch" id="delivery-on"></label>
               <label for="delivery-on" style="font-weight:600;color:var(--ink);">This job includes a delivery</label>
             </div>
             <div class="auto-calc-row">
-              <input type="checkbox" id="delivery-cost-auto" checked>
+              <label class="toggle"><input type="checkbox" class="switch" id="delivery-cost-auto" checked></label>
               <label for="delivery-cost-auto">Auto-calculate from Fuel Calculator</label>
             </div>
             <div class="var-row">
@@ -919,7 +919,7 @@
           </div>
 
           <div class="auto-calc-row" style="margin-bottom:14px;margin-top:4px;">
-            <input type="checkbox" id="carriage-on">
+            <label class="toggle"><input type="checkbox" class="switch" id="carriage-on"></label>
             <label for="carriage-on" style="font-weight:600;color:var(--ink);">Bill Main Carriage on this quote</label>
           </div>
 
@@ -952,7 +952,7 @@
           </div>
 
           <div class="auto-calc-row" style="margin-bottom:14px;">
-            <input type="checkbox" id="stdpallet-on">
+            <label class="toggle"><input type="checkbox" class="switch" id="stdpallet-on"></label>
             <label for="stdpallet-on" style="font-weight:600;color:var(--ink);">Bill Standard Pallet on this quote</label>
           </div>
           <div class="var-item">
@@ -964,7 +964,7 @@
           </div>
 
           <div class="auto-calc-row" style="margin-bottom:14px;">
-            <input type="checkbox" id="dblpallet-on">
+            <label class="toggle"><input type="checkbox" class="switch" id="dblpallet-on"></label>
             <label for="dblpallet-on" style="font-weight:600;color:var(--ink);">Bill Double Pallet on this quote</label>
           </div>
           <div class="var-item">
@@ -983,7 +983,7 @@
           </div>
 
           <div class="auto-calc-row" style="margin-bottom:14px;">
-            <input type="checkbox" id="waiting-on">
+            <label class="toggle"><input type="checkbox" class="switch" id="waiting-on"></label>
             <label for="waiting-on" style="font-weight:600;color:var(--ink);">Bill Waiting Time on this quote</label>
           </div>
           <div class="var-item">
@@ -1177,7 +1177,7 @@
         </div>
       </div>
       <div class="auto-calc-row" style="margin-top:12px;">
-        <input type="checkbox" id="bill-fuel-pickup">
+        <label class="toggle"><input type="checkbox" class="switch" id="bill-fuel-pickup"></label>
         <label for="bill-fuel-pickup">Bill Fuel Charge for Pickup</label>
       </div>
       <p class="fuel-match-note" id="fuel-pickup-note">Enter a city above or set a manual Area override.</p>
@@ -1220,7 +1220,7 @@
         </div>
       </div>
       <div class="auto-calc-row" style="margin-top:12px;">
-        <input type="checkbox" id="bill-fuel-delivery">
+        <label class="toggle"><input type="checkbox" class="switch" id="bill-fuel-delivery"></label>
         <label for="bill-fuel-delivery">Bill Fuel Charge for Delivery</label>
       </div>
       <p class="fuel-match-note" id="fuel-delivery-note">Enter a city above or set a manual Area override.</p>
@@ -1981,9 +1981,15 @@
     lines.push(rule);
     lines.push(plainRow('ESTIMATED TOTAL', fmt(total)));
     lines.push('');
-    lines.push('Estimate only, subject to carrier tariffs, fuel surcharge, and customs');
-    lines.push('assessment. Waiting time and man power, if incurred, are billed at the');
-    lines.push('rates shown above; other add-ons and overtime, if incurred, are flat fees.');
+    lines.push('Cargo disclosure:');
+    lines.push('');
+    lines.push('•  Waiting time is not included. The first 30 minutes are complimentary. Thereafter, waiting time will be charged at USD $65.00 per hour or any portion thereof.');
+    lines.push('•  Validity of this estimate is for 7 days, subject to change based on space and availability.');
+    lines.push('•  A claim MUST be filed within 7 days from the date that a shipment is delivered.');
+    lines.push('•  This estimate is based on the pickup and delivery location(s) provided at the time of request. Any changes to the location(s) or routing may result in revised pricing.');
+    lines.push('•  This estimate does not include cargo insurance, inside pickup or delivery, special handling, accessorial charges, storage, waiting time, or any other services unless specifically stated.');
+    lines.push('•  If additional cargo insurance or coverage is required, please let us know and we will be happy to provide an estimate');
+    lines.push('•  The estimate is subject to adjustment upon verification of the shipment\'s piece count, dimensions, weight, declared value, and commodity');
     lines.push('');
     lines.push('Film Logic');
     return lines.join('\n');
@@ -2057,7 +2063,18 @@
 
       // Footer
       '<tr><td style="padding:0 28px 24px;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.6;color:#9A9A9E;border-top:1px solid #ECEBF0;">' +
-        '<div style="padding-top:14px;">Estimate only, subject to carrier tariffs, fuel surcharge, and customs assessment. Waiting time and man power, if incurred, are billed at the rates shown above; other add-ons and overtime, if incurred, are flat fees.</div>' +
+        '<div style="padding-top:14px;">' +
+          '<strong style="display:block;margin-bottom:4px;">Cargo disclosure:</strong>' +
+          '<ul style="margin:0;padding-left:16px;">' +
+            '<li>Waiting time is not included. The first 30 minutes are complimentary. Thereafter, waiting time will be charged at USD $65.00 per hour or any portion thereof.</li>' +
+            '<li>Validity of this estimate is for 7 days, subject to change based on space and availability.</li>' +
+            '<li>A claim MUST be filed within 7 days from the date that a shipment is delivered.</li>' +
+            '<li>This estimate is based on the pickup and delivery location(s) provided at the time of request. Any changes to the location(s) or routing may result in revised pricing.</li>' +
+            '<li>This estimate does not include cargo insurance, inside pickup or delivery, special handling, accessorial charges, storage, waiting time, or any other services unless specifically stated.</li>' +
+            '<li>If additional cargo insurance or coverage is required, please let us know and we will be happy to provide an estimate</li>' +
+            '<li>The estimate is subject to adjustment upon verification of the shipment\'s piece count, dimensions, weight, declared value, and commodity</li>' +
+          '</ul>' +
+        '</div>' +
       '</td></tr>' +
 
     '</table>';
@@ -2171,16 +2188,26 @@
       pdf.setLineWidth(0.2);
       pdf.line(mL, y, PW - mR, y);
       y += 6;
-      pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(7.5);
       pdf.setTextColor(154, 154, 158);
-      var footerLines = pdf.splitTextToSize(
-        'Estimate only, subject to carrier tariffs, fuel surcharge, and customs assessment. ' +
-        'Waiting time and man power, if incurred, are billed at the rates shown above; ' +
-        'other add-ons and overtime, if incurred, are flat fees.',
-        cW
-      );
-      pdf.text(footerLines, mL, y);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Cargo disclosure:', mL, y);
+      y += 4.5;
+      pdf.setFont('helvetica', 'normal');
+      var disclosureBullets = [
+        'Waiting time is not included. The first 30 minutes are complimentary. Thereafter, waiting time will be charged at USD $65.00 per hour or any portion thereof.',
+        'Validity of this estimate is for 7 days, subject to change based on space and availability.',
+        'A claim MUST be filed within 7 days from the date that a shipment is delivered.',
+        'This estimate is based on the pickup and delivery location(s) provided at the time of request. Any changes to the location(s) or routing may result in revised pricing.',
+        'This estimate does not include cargo insurance, inside pickup or delivery, special handling, accessorial charges, storage, waiting time, or any other services unless specifically stated.',
+        'If additional cargo insurance or coverage is required, please let us know and we will be happy to provide an estimate.',
+        'The estimate is subject to adjustment upon verification of the shipment\'s piece count, dimensions, weight, declared value, and commodity.'
+      ];
+      disclosureBullets.forEach(function(b) {
+        var wrapped = pdf.splitTextToSize('•  ' + b, cW - 3);
+        pdf.text(wrapped, mL + 2, y);
+        y += wrapped.length * 3.8;
+      });
 
       var filename = 'filmlogic-quote' + (d.refNumber ? '-' + d.refNumber.replace(/[^a-z0-9]/gi, '-') : '') + '.pdf';
       pdf.save(filename);
@@ -2453,7 +2480,7 @@
         }
         clearTimeout(confirmTimer);
         delBtn.disabled = true;
-        fetch(API_BASE + '/api/quotes/' + encodeURIComponent(doc.id), { method: 'DELETE' })
+        fetch(API_BASE + '/api/quotes/' + encodeURIComponent(d.id), { method: 'DELETE' })
           .then(function(){ initHistory(); })
           .catch(function(){
             delBtn.disabled = false;
