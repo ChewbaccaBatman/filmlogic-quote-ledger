@@ -1772,8 +1772,14 @@
     labelInput.value = line.effectiveLabel;
     labelInput.addEventListener('focus', function(){ ticketInputFocused = true; });
     labelInput.addEventListener('input', function(){
-      var ov = ticketOverrides[line.id] || {};
-      ov.label = labelInput.value; ticketOverrides[line.id] = ov;
+      if(line.isCustom) {
+        for(var i = 0; i < customLines.length; i++){
+          if(customLines[i].id === line.id){ customLines[i].label = labelInput.value; break; }
+        }
+      } else {
+        var ov = ticketOverrides[line.id] || {};
+        ov.label = labelInput.value; ticketOverrides[line.id] = ov;
+      }
     });
     labelInput.addEventListener('blur', function(){ ticketInputFocused = false; render(); });
     div.appendChild(labelInput);
@@ -1783,8 +1789,15 @@
     amtInput.step = '0.01'; amtInput.value = line.effectiveAmount.toFixed(2);
     amtInput.addEventListener('focus', function(){ ticketInputFocused = true; });
     amtInput.addEventListener('input', function(){
-      var ov = ticketOverrides[line.id] || {};
-      ov.amount = parseFloat(amtInput.value) || 0; ticketOverrides[line.id] = ov;
+      var v = parseFloat(amtInput.value) || 0;
+      if(line.isCustom) {
+        for(var i = 0; i < customLines.length; i++){
+          if(customLines[i].id === line.id){ customLines[i].amount = v; break; }
+        }
+      } else {
+        var ov = ticketOverrides[line.id] || {};
+        ov.amount = v; ticketOverrides[line.id] = ov;
+      }
       var d2 = computeData();
       text('totalAmt', fmt(computeTicketTotal(buildVisibleLines(d2))));
     });
