@@ -318,11 +318,74 @@
     color:var(--navy); font-weight:600;
   }
 
+  /* ---------- Charge chips + add-on cards ---------- */
+  .charge-chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    padding:4px 0 20px;
+  }
+  .charge-chip{
+    display:inline-flex;
+    align-items:center;
+    padding:6px 14px;
+    background:transparent;
+    border:1.5px dashed var(--teal);
+    border-radius:999px;
+    font-family:inherit;
+    font-size:.82rem;
+    font-weight:600;
+    color:var(--teal);
+    cursor:pointer;
+    transition:background .14s ease, opacity .14s ease;
+  }
+  .charge-chip:hover:not(:disabled){ background:color-mix(in srgb, var(--teal) 10%, transparent); }
+  .charge-chip:disabled{ opacity:.35; cursor:default; border-style:solid; }
+  .charge-card{
+    background:var(--surface-2);
+    border:1px solid var(--line-strong);
+    border-radius:var(--radius-md);
+    margin-bottom:12px;
+    overflow:hidden;
+  }
+  .charge-card-hd{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 16px;
+    background:var(--surface-1);
+    border-bottom:1px solid var(--line-strong);
+  }
+  .charge-card:last-child{ margin-bottom:0; }
+  .charge-card-title{
+    flex:1;
+    font-weight:600;
+    font-size:.92rem;
+    color:var(--ink);
+  }
+  .charge-card-body{ padding:16px; }
+  .ccard-remove{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:26px; height:26px;
+    background:transparent;
+    border:1px solid var(--line-strong);
+    border-radius:50%;
+    font-size:1.1rem;
+    line-height:1;
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:background .14s ease, color .14s ease, border-color .14s ease;
+    flex:none;
+  }
+  .ccard-remove:hover{ background:color-mix(in srgb, #c0392b 12%, transparent); color:#c0392b; border-color:#c0392b; }
+
   /* ---------- Weight calculator ---------- */
   .weight-calc{ margin-top:20px; padding-top:20px; border-top:1px dashed var(--line-strong); }
   .weight-stats{
     display:grid;
-    grid-template-columns:repeat(3, 1fr);
+    grid-template-columns:repeat(2, 1fr);
     gap:12px;
     margin-top:16px;
   }
@@ -786,223 +849,323 @@
           </ul>
         </section>
 
-        <section class="block">
+        <section class="block" id="chargesSection">
           <div class="block-head">
-            <h2><span class="step">03</span> Variable Service Charges</h2>
-            <p class="section-note"><span class="lock">🔒</span> Cost &amp; margin here are internal — only the marked-up sell price reaches the client copy.</p>
+            <h2><span class="step">03</span> Charges</h2>
+            <p class="section-note">Click a chip to add a charge. Cost &amp; margin fields are internal — only the sell price reaches the client copy.</p>
           </div>
 
-          <div class="var-item">
-            <div class="field-group" style="margin-bottom:12px;">
-              <label>Pickup Transport</label>
-              <div class="segmented small" role="radiogroup" id="pickupTransportType">
-                <button type="button" class="seg-btn active" data-type="In Van">In Van</button>
-                <button type="button" class="seg-btn" data-type="In Truck">In Truck</button>
+          <div class="charge-chips">
+            <button type="button" class="charge-chip" data-ckey="pickup">+ Pickup</button>
+            <button type="button" class="charge-chip" data-ckey="pickupFuel">+ Fuel Charge (Pickup)</button>
+            <button type="button" class="charge-chip" data-ckey="manpowerPickup">+ Man Power – Pickup</button>
+            <button type="button" class="charge-chip" data-ckey="airport">+ Airport Transfer</button>
+            <button type="button" class="charge-chip" data-ckey="carriage">+ Mode of Transportation</button>
+            <button type="button" class="charge-chip" data-ckey="delivery">+ Delivery</button>
+            <button type="button" class="charge-chip" data-ckey="deliveryFuel">+ Fuel Charge (Delivery)</button>
+            <button type="button" class="charge-chip" data-ckey="manpowerDelivery">+ Man Power – Delivery</button>
+            <button type="button" class="charge-chip" data-ckey="liftgate">+ Lift Gate</button>
+            <button type="button" class="charge-chip" data-ckey="palletizing">+ Palletizing</button>
+            <button type="button" class="charge-chip" data-ckey="waiting">+ Waiting Time</button>
+            <button type="button" class="charge-chip" data-ckey="overtime">+ Overtime Fee</button>
+            <button type="button" class="charge-chip" data-ckey="dangerousGoods">+ Dangerous Goods</button>
+            <button type="button" class="charge-chip" data-ckey="aesFilingFee">+ AES Filing Fee</button>
+            <button type="button" class="charge-chip" data-ckey="airlineUnFee">+ Airline UN Fee</button>
+          </div>
+
+          <div id="chargeCards">
+
+            <!-- Pickup -->
+            <div class="charge-card" id="ccard-pickup" hidden>
+              <div class="charge-card-hd">
+                <label class="toggle"><input type="checkbox" class="switch" id="pickup-on"></label>
+                <span class="charge-card-title">Pickup</span>
+                <button type="button" class="ccard-remove" data-ckey="pickup">×</button>
+              </div>
+              <div class="charge-card-body">
+                <div class="field-group" style="margin-bottom:12px;">
+                  <label>Transport</label>
+                  <div class="segmented small" role="radiogroup" id="pickupTransportType">
+                    <button type="button" class="seg-btn active" data-type="In Van">In Van</button>
+                    <button type="button" class="seg-btn" data-type="In Truck">In Truck</button>
+                  </div>
+                </div>
+                <div class="auto-calc-row">
+                  <label class="toggle"><input type="checkbox" class="switch" id="pickup-cost-auto" checked></label>
+                  <label for="pickup-cost-auto">Auto-calculate from Fuel Calculator</label>
+                </div>
+                <div class="var-row" style="margin-top:12px;">
+                  <div class="field"><label for="pickup">Cost ($)</label><input type="number" id="pickup" min="0" step="0.01" value="0"></div>
+                  <div class="field"><label for="pickup-margin">Margin (%)</label><input type="number" id="pickup-margin" min="0" max="300" step="0.1" value="50"></div>
+                </div>
+                <p class="sell-preview">Sell → <strong id="pickup-sell">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
+                <div class="fuel-summary-box" style="margin-top:12px;">
+                  <span class="fuel-summary-label">Fuel Charge</span>
+                  <span class="fuel-summary-status" id="pickup-fuel-summary">—</span>
+                  <button type="button" class="btn ghost small" id="pickupEditFuelBtn">Edit in Fuel Calculator →</button>
+                </div>
               </div>
             </div>
-            <div class="auto-calc-row" style="margin-bottom:14px;">
-              <label class="toggle"><input type="checkbox" class="switch" id="pickup-on"></label>
-              <label for="pickup-on" style="font-weight:600;color:var(--ink);">This job includes a pickup</label>
-            </div>
-            <div class="auto-calc-row">
-              <label class="toggle"><input type="checkbox" class="switch" id="pickup-cost-auto" checked></label>
-              <label for="pickup-cost-auto">Auto-calculate from Fuel Calculator</label>
-            </div>
-            <div class="var-row">
-              <div class="field"><label for="pickup">Pickup Charge — Cost ($)</label><input type="number" id="pickup" min="0" step="0.01" value="0"></div>
-              <div class="field"><label for="pickup-margin">Margin (%)</label>
-                <input type="number" id="pickup-margin" min="0" max="300" step="0.1" value="50">
+
+            <!-- Fuel Charge (Pickup) -->
+            <div class="charge-card" id="ccard-pickupFuel" hidden>
+              <div class="charge-card-hd">
+                <label class="toggle"><input type="checkbox" class="switch" id="bill-fuel-pickup"></label>
+                <span class="charge-card-title">Fuel Charge (Pickup)</span>
+                <button type="button" class="ccard-remove" data-ckey="pickupFuel">×</button>
               </div>
             </div>
-            <p class="sell-preview">Sell price → <strong id="pickup-sell">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
-            <div class="fuel-summary-box">
-              <span class="fuel-summary-label">Fuel Charge</span>
-              <span class="fuel-summary-status" id="pickup-fuel-summary">—</span>
-              <button type="button" class="btn ghost small" id="pickupEditFuelBtn">Edit in Fuel Calculator →</button>
-            </div>
-            <ul class="fee-list" style="margin-top:14px;">
-              <li>
+
+            <!-- Man Power – Pickup -->
+            <div class="charge-card" id="ccard-manpowerPickup" hidden>
+              <div class="charge-card-hd">
                 <label class="toggle"><input type="checkbox" class="switch" id="manpower-pickup-on"></label>
-                <span class="fee-name">Man Power (Pickup) <em>flat, if applicable</em></span>
-                <input type="number" class="fee-input" id="manpower-pickup-amt" min="0" step="0.01" value="200">
-              </li>
-              <li>
-                <label class="toggle"><input type="checkbox" class="switch" id="liftgate-pickup-on"></label>
-                <span class="fee-name">Lift Gate (Pickup) <em>flat, if applicable</em></span>
-                <input type="number" class="fee-input" id="liftgate-pickup-amt" min="0" step="0.01" value="55">
-              </li>
-            </ul>
-          </div>
+                <span class="charge-card-title">Man Power – Pickup</span>
+                <button type="button" class="ccard-remove" data-ckey="manpowerPickup">×</button>
+              </div>
+              <div class="charge-card-body">
+                <div class="field" style="max-width:200px;">
+                  <label for="manpower-pickup-amt">Amount ($)</label>
+                  <input type="number" class="fee-input" id="manpower-pickup-amt" min="0" step="0.01" value="200">
+                </div>
+              </div>
+            </div>
 
-          <div class="var-item">
-            <div class="auto-calc-row" style="margin-bottom:14px;">
-              <label class="toggle"><input type="checkbox" class="switch" id="airport-on"></label>
-              <label for="airport-on" style="font-weight:600;color:var(--ink);">This job includes an airport transfer</label>
-            </div>
-            <div class="auto-calc-row">
-              <label class="toggle"><input type="checkbox" class="switch" id="airport-cost-auto" checked></label>
-              <label for="airport-cost-auto">Auto-calculate from Fuel Calculator (uses Pickup surcharge %)</label>
-            </div>
-            <div class="var-row">
-              <div class="field"><label for="airportTransfer">Airport Transfer — Cost ($)</label><input type="number" id="airportTransfer" min="0" step="0.01" value="0"></div>
-              <div class="field"><label for="airportTransfer-margin">Margin (%)</label>
-                <input type="number" id="airportTransfer-margin" min="0" max="300" step="0.1" value="50">
+            <!-- Airport Transfer -->
+            <div class="charge-card" id="ccard-airport" hidden>
+              <div class="charge-card-hd">
+                <label class="toggle"><input type="checkbox" class="switch" id="airport-on"></label>
+                <span class="charge-card-title">Airport Transfer</span>
+                <button type="button" class="ccard-remove" data-ckey="airport">×</button>
+              </div>
+              <div class="charge-card-body">
+                <div class="auto-calc-row">
+                  <label class="toggle"><input type="checkbox" class="switch" id="airport-cost-auto" checked></label>
+                  <label for="airport-cost-auto">Auto-calculate (uses Pickup surcharge %)</label>
+                </div>
+                <div class="var-row" style="margin-top:12px;">
+                  <div class="field"><label for="airportTransfer">Cost ($)</label><input type="number" id="airportTransfer" min="0" step="0.01" value="0"></div>
+                  <div class="field"><label for="airportTransfer-margin">Margin (%)</label><input type="number" id="airportTransfer-margin" min="0" max="300" step="0.1" value="50"></div>
+                </div>
+                <p class="sell-preview">Sell → <strong id="airportTransfer-sell">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
               </div>
             </div>
-            <p class="sell-preview">Sell price → <strong id="airportTransfer-sell">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
-          </div>
 
-          <div class="var-item">
-            <div class="field-group" style="margin-bottom:12px;">
-              <label>Delivery Transport</label>
-              <div class="segmented small" role="radiogroup" id="deliveryTransportType">
-                <button type="button" class="seg-btn active" data-type="In Van">In Van</button>
-                <button type="button" class="seg-btn" data-type="In Truck">In Truck</button>
+            <!-- Mode of Transportation -->
+            <div class="charge-card" id="ccard-carriage" hidden>
+              <div class="charge-card-hd">
+                <label class="toggle"><input type="checkbox" class="switch" id="carriage-on"></label>
+                <span class="charge-card-title">Mode of Transportation</span>
+                <button type="button" class="ccard-remove" data-ckey="carriage">×</button>
+              </div>
+              <div class="charge-card-body">
+                <div class="field-group" style="margin-bottom:12px;">
+                  <label>Mode</label>
+                  <div class="segmented" role="radiogroup" aria-label="Carriage mode" id="carriageMode">
+                    <button type="button" class="seg-btn active" data-mode="Airfreight">Airfreight</button>
+                    <button type="button" class="seg-btn" data-mode="Dedicated Truck">Dedicated Truck</button>
+                    <button type="button" class="seg-btn" data-mode="Line Haul">Line Haul</button>
+                  </div>
+                </div>
+                <div class="field-group" id="airfreightServiceGroup" style="margin-bottom:12px;">
+                  <label>Service Level</label>
+                  <div class="segmented small" role="radiogroup" aria-label="Airfreight service level" id="airfreightService">
+                    <button type="button" class="seg-btn active" data-svc="General">General</button>
+                    <button type="button" class="seg-btn" data-svc="Express">Express</button>
+                  </div>
+                </div>
+                <div class="var-row">
+                  <div class="field"><label for="carriage" id="carriageCostLabel">Airfreight Cost ($)</label><input type="number" id="carriage" min="0" step="1" value="0"></div>
+                  <div class="field"><label for="carriage-margin">Margin (%)</label><input type="number" id="carriage-margin" min="0" max="300" step="0.1" value="50"></div>
+                </div>
+                <p class="section-note" id="carriageMinNote">Airfreight carries a $350 minimum charge.</p>
+                <p class="sell-preview">Sell → <strong id="carriage-sell">$0.00</strong> <span class="internal-flag" id="carriage-min-flag" hidden>($350 min applied)</span> <span class="internal-flag">(not shown to client)</span></p>
               </div>
             </div>
-            <div class="auto-calc-row" style="margin-bottom:14px;">
-              <label class="toggle"><input type="checkbox" class="switch" id="delivery-on"></label>
-              <label for="delivery-on" style="font-weight:600;color:var(--ink);">This job includes a delivery</label>
-            </div>
-            <div class="auto-calc-row">
-              <label class="toggle"><input type="checkbox" class="switch" id="delivery-cost-auto" checked></label>
-              <label for="delivery-cost-auto">Auto-calculate from Fuel Calculator</label>
-            </div>
-            <div class="var-row">
-              <div class="field"><label for="delivery">Delivery Cost ($)</label><input type="number" id="delivery" min="0" step="0.01" value="0"></div>
-              <div class="field"><label for="delivery-margin">Margin (%)</label>
-                <input type="number" id="delivery-margin" min="0" max="300" step="0.1" value="50">
+
+            <!-- Delivery -->
+            <div class="charge-card" id="ccard-delivery" hidden>
+              <div class="charge-card-hd">
+                <label class="toggle"><input type="checkbox" class="switch" id="delivery-on"></label>
+                <span class="charge-card-title">Delivery</span>
+                <button type="button" class="ccard-remove" data-ckey="delivery">×</button>
+              </div>
+              <div class="charge-card-body">
+                <div class="field-group" style="margin-bottom:12px;">
+                  <label>Transport</label>
+                  <div class="segmented small" role="radiogroup" id="deliveryTransportType">
+                    <button type="button" class="seg-btn active" data-type="In Van">In Van</button>
+                    <button type="button" class="seg-btn" data-type="In Truck">In Truck</button>
+                  </div>
+                </div>
+                <div class="auto-calc-row">
+                  <label class="toggle"><input type="checkbox" class="switch" id="delivery-cost-auto" checked></label>
+                  <label for="delivery-cost-auto">Auto-calculate from Fuel Calculator</label>
+                </div>
+                <div class="var-row" style="margin-top:12px;">
+                  <div class="field"><label for="delivery">Cost ($)</label><input type="number" id="delivery" min="0" step="0.01" value="0"></div>
+                  <div class="field"><label for="delivery-margin">Margin (%)</label><input type="number" id="delivery-margin" min="0" max="300" step="0.1" value="50"></div>
+                </div>
+                <p class="sell-preview">Sell → <strong id="delivery-sell">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
+                <div class="fuel-summary-box" style="margin-top:12px;">
+                  <span class="fuel-summary-label">Fuel Charge</span>
+                  <span class="fuel-summary-status" id="delivery-fuel-summary">—</span>
+                  <button type="button" class="btn ghost small" id="deliveryEditFuelBtn">Edit in Fuel Calculator →</button>
+                </div>
               </div>
             </div>
-            <p class="sell-preview">Sell price → <strong id="delivery-sell">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
-            <div class="fuel-summary-box">
-              <span class="fuel-summary-label">Fuel Charge</span>
-              <span class="fuel-summary-status" id="delivery-fuel-summary">—</span>
-              <button type="button" class="btn ghost small" id="deliveryEditFuelBtn">Edit in Fuel Calculator →</button>
+
+            <!-- Fuel Charge (Delivery) -->
+            <div class="charge-card" id="ccard-deliveryFuel" hidden>
+              <div class="charge-card-hd">
+                <label class="toggle"><input type="checkbox" class="switch" id="bill-fuel-delivery"></label>
+                <span class="charge-card-title">Fuel Charge (Delivery)</span>
+                <button type="button" class="ccard-remove" data-ckey="deliveryFuel">×</button>
+              </div>
             </div>
-            <ul class="fee-list" style="margin-top:14px;">
-              <li>
+
+            <!-- Man Power – Delivery -->
+            <div class="charge-card" id="ccard-manpowerDelivery" hidden>
+              <div class="charge-card-hd">
                 <label class="toggle"><input type="checkbox" class="switch" id="manpower-delivery-on"></label>
-                <span class="fee-name">Man Power (Delivery) <em>flat, if applicable</em></span>
-                <input type="number" class="fee-input" id="manpower-delivery-amt" min="0" step="0.01" value="200">
-              </li>
-              <li>
-                <label class="toggle"><input type="checkbox" class="switch" id="liftgate-delivery-on"></label>
-                <span class="fee-name">Lift Gate (Delivery) <em>flat, if applicable</em></span>
-                <input type="number" class="fee-input" id="liftgate-delivery-amt" min="0" step="0.01" value="55">
-              </li>
-            </ul>
-          </div>
-        </section>
-
-        <section class="block">
-          <div class="block-head">
-            <h2><span class="step">04</span> Main Carriage</h2>
-            <p class="section-note"><span class="lock">🔒</span> Cost &amp; margin here are internal — only the marked-up sell price reaches the client copy.</p>
-          </div>
-
-          <div class="field-group">
-            <label>Mode</label>
-            <div class="segmented" role="radiogroup" aria-label="Main carriage mode" id="carriageMode">
-              <button type="button" class="seg-btn active" data-mode="Airfreight">Airfreight</button>
-              <button type="button" class="seg-btn" data-mode="Dedicated Truck">Dedicated Truck</button>
-              <button type="button" class="seg-btn" data-mode="Line Haul">Line Haul</button>
-            </div>
-          </div>
-
-          <div class="field-group" id="airfreightServiceGroup">
-            <label>Service Level</label>
-            <div class="segmented small" role="radiogroup" aria-label="Airfreight service level" id="airfreightService">
-              <button type="button" class="seg-btn active" data-svc="General">General</button>
-              <button type="button" class="seg-btn" data-svc="Express">Express</button>
-            </div>
-          </div>
-
-          <div class="auto-calc-row" style="margin-bottom:14px;margin-top:4px;">
-            <label class="toggle"><input type="checkbox" class="switch" id="carriage-on"></label>
-            <label for="carriage-on" style="font-weight:600;color:var(--ink);">Bill Main Carriage on this quote</label>
-          </div>
-
-          <div class="var-item" style="margin-top:0;">
-            <div class="var-row">
-              <div class="field"><label for="carriage" id="carriageCostLabel">Airfreight Cost ($)</label><input type="number" id="carriage" min="0" step="1" value="0"></div>
-              <div class="field"><label for="carriage-margin">Margin (%)</label>
-                <input type="number" id="carriage-margin" min="0" max="300" step="0.1" value="50">
+                <span class="charge-card-title">Man Power – Delivery</span>
+                <button type="button" class="ccard-remove" data-ckey="manpowerDelivery">×</button>
+              </div>
+              <div class="charge-card-body">
+                <div class="field" style="max-width:200px;">
+                  <label for="manpower-delivery-amt">Amount ($)</label>
+                  <input type="number" class="fee-input" id="manpower-delivery-amt" min="0" step="0.01" value="200">
+                </div>
               </div>
             </div>
-            <p class="section-note" id="carriageMinNote">Airfreight carries a $350 minimum charge — if cost plus margin comes in under that, the minimum is applied automatically.</p>
-            <p class="sell-preview">Sell price → <strong id="carriage-sell">$0.00</strong> <span class="internal-flag" id="carriage-min-flag" hidden>($350 minimum applied)</span> <span class="internal-flag">(not shown to client)</span></p>
-          </div>
-        </section>
 
-        <section class="block">
-          <div class="block-head">
-            <h2><span class="step">05</span> Add-On Fees</h2>
-            <p class="section-note">Billed only if they occur — shown to the client as a heads-up either way.</p>
-          </div>
-
-          <div class="var-item">
-            <ul class="fee-list" style="margin:0;">
-              <li>
-                <label class="toggle"><input type="checkbox" class="switch" id="dangerous-goods-on"></label>
-                <span class="fee-name">Dangerous Goods Fee <em>flat, if applicable</em></span>
-                <input type="number" class="fee-input" id="dangerous-goods-amt" min="0" step="0.01" value="150">
-              </li>
-            </ul>
-          </div>
-
-          <div class="auto-calc-row" style="margin-bottom:14px;">
-            <label class="toggle"><input type="checkbox" class="switch" id="stdpallet-on"></label>
-            <label for="stdpallet-on" style="font-weight:600;color:var(--ink);">Bill Standard Pallet on this quote</label>
-          </div>
-          <div class="var-item">
-            <div class="var-row">
-              <div class="field"><label for="std-pallet-rate">Standard Pallet — Rate ($/pallet)</label><input type="number" id="std-pallet-rate" min="0" step="0.01" value="65"></div>
-              <div class="field"><label for="std-pallet-qty">Qty (if applicable)</label><input type="number" id="std-pallet-qty" min="0" step="1" value="0"></div>
+            <!-- Lift Gate -->
+            <div class="charge-card" id="ccard-liftgate" hidden>
+              <div class="charge-card-hd">
+                <span class="charge-card-title">Lift Gate</span>
+                <button type="button" class="ccard-remove" data-ckey="liftgate">×</button>
+              </div>
+              <div class="charge-card-body">
+                <ul class="fee-list">
+                  <li>
+                    <label class="toggle"><input type="checkbox" class="switch" id="liftgate-pickup-on"></label>
+                    <span class="fee-name">Lift Gate – Pickup</span>
+                    <input type="number" class="fee-input" id="liftgate-pickup-amt" min="0" step="0.01" value="55">
+                  </li>
+                  <li>
+                    <label class="toggle"><input type="checkbox" class="switch" id="liftgate-delivery-on"></label>
+                    <span class="fee-name">Lift Gate – Delivery</span>
+                    <input type="number" class="fee-input" id="liftgate-delivery-amt" min="0" step="0.01" value="55">
+                  </li>
+                </ul>
+              </div>
             </div>
-            <p class="charge-preview">Charge → <strong id="std-pallet-preview">$0.00</strong></p>
-          </div>
 
-          <div class="auto-calc-row" style="margin-bottom:14px;">
-            <label class="toggle"><input type="checkbox" class="switch" id="dblpallet-on"></label>
-            <label for="dblpallet-on" style="font-weight:600;color:var(--ink);">Bill Double Pallet on this quote</label>
-          </div>
-          <div class="var-item">
-            <div class="var-row">
-              <div class="field"><label for="dbl-pallet-rate">Double Pallet — Rate ($/pallet)</label><input type="number" id="dbl-pallet-rate" min="0" step="0.01" value="85"></div>
-              <div class="field"><label for="dbl-pallet-qty">Qty (if applicable)</label><input type="number" id="dbl-pallet-qty" min="0" step="1" value="0"></div>
+            <!-- Palletizing -->
+            <div class="charge-card" id="ccard-palletizing" hidden>
+              <div class="charge-card-hd">
+                <span class="charge-card-title">Palletizing</span>
+                <button type="button" class="ccard-remove" data-ckey="palletizing">×</button>
+              </div>
+              <div class="charge-card-body">
+                <div class="auto-calc-row" style="margin-bottom:10px;">
+                  <label class="toggle"><input type="checkbox" class="switch" id="stdpallet-on"></label>
+                  <label for="stdpallet-on" style="font-weight:600;color:var(--ink);">Standard Pallet</label>
+                </div>
+                <div class="var-row" style="margin-bottom:6px;">
+                  <div class="field"><label for="std-pallet-rate">Rate ($/pallet)</label><input type="number" id="std-pallet-rate" min="0" step="0.01" value="65"></div>
+                  <div class="field"><label for="std-pallet-qty">Qty</label><input type="number" id="std-pallet-qty" min="0" step="1" value="0"></div>
+                </div>
+                <p class="charge-preview" style="margin-bottom:16px;">Charge → <strong id="std-pallet-preview">$0.00</strong></p>
+                <div class="auto-calc-row" style="margin-bottom:10px;">
+                  <label class="toggle"><input type="checkbox" class="switch" id="dblpallet-on"></label>
+                  <label for="dblpallet-on" style="font-weight:600;color:var(--ink);">Double Pallet</label>
+                </div>
+                <div class="var-row" style="margin-bottom:6px;">
+                  <div class="field"><label for="dbl-pallet-rate">Rate ($/pallet)</label><input type="number" id="dbl-pallet-rate" min="0" step="0.01" value="85"></div>
+                  <div class="field"><label for="dbl-pallet-qty">Qty</label><input type="number" id="dbl-pallet-qty" min="0" step="1" value="0"></div>
+                </div>
+                <p class="charge-preview">Charge → <strong id="dbl-pallet-preview">$0.00</strong></p>
+              </div>
             </div>
-            <p class="charge-preview">Charge → <strong id="dbl-pallet-preview">$0.00</strong></p>
-          </div>
-        </section>
 
-        <section class="block">
-          <div class="block-head">
-            <h2><span class="step">06</span> Time-Based Charges</h2>
-            <p class="section-note">Billed only if they occur — shown to the client as a heads-up either way.</p>
-          </div>
-
-          <div class="auto-calc-row" style="margin-bottom:14px;">
-            <label class="toggle"><input type="checkbox" class="switch" id="waiting-on"></label>
-            <label for="waiting-on" style="font-weight:600;color:var(--ink);">Bill Waiting Time on this quote</label>
-          </div>
-          <div class="var-item">
-            <div class="var-row">
-              <div class="field"><label for="waiting-rate">Waiting Time — Rate ($/hr)</label><input type="number" id="waiting-rate" min="0" step="0.01" value="65"></div>
-              <div class="field"><label for="waiting-hrs">Hours (if applicable)</label><input type="number" id="waiting-hrs" min="0" step="0.25" value="0"></div>
+            <!-- Waiting Time -->
+            <div class="charge-card" id="ccard-waiting" hidden>
+              <div class="charge-card-hd">
+                <label class="toggle"><input type="checkbox" class="switch" id="waiting-on"></label>
+                <span class="charge-card-title">Waiting Time</span>
+                <button type="button" class="ccard-remove" data-ckey="waiting">×</button>
+              </div>
+              <div class="charge-card-body">
+                <div class="var-row">
+                  <div class="field"><label for="waiting-rate">Rate ($/hr)</label><input type="number" id="waiting-rate" min="0" step="0.01" value="65"></div>
+                  <div class="field"><label for="waiting-hrs">Hours</label><input type="number" id="waiting-hrs" min="0" step="0.25" value="0"></div>
+                </div>
+                <p class="charge-preview" style="margin-top:8px;">Charge → <strong id="waiting-amt-inline">$0.00</strong></p>
+              </div>
             </div>
-            <p class="charge-preview">Charge → <strong id="waiting-amt-inline">$0.00</strong></p>
-          </div>
 
-          <div class="var-item">
-            <ul class="fee-list" style="margin:0;">
-              <li>
+            <!-- Overtime Fee -->
+            <div class="charge-card" id="ccard-overtime" hidden>
+              <div class="charge-card-hd">
                 <label class="toggle"><input type="checkbox" class="switch" id="overtime-on"></label>
-                <span class="fee-name">Overtime Fee <em>flat, if applicable</em></span>
-                <input type="number" class="fee-input" id="overtime-amt" min="0" step="0.01" value="200">
-              </li>
-            </ul>
-          </div>
+                <span class="charge-card-title">Overtime Fee</span>
+                <button type="button" class="ccard-remove" data-ckey="overtime">×</button>
+              </div>
+              <div class="charge-card-body">
+                <div class="field" style="max-width:200px;">
+                  <label for="overtime-amt">Amount ($)</label>
+                  <input type="number" class="fee-input" id="overtime-amt" min="0" step="0.01" value="200">
+                </div>
+              </div>
+            </div>
+
+            <!-- Dangerous Goods Fee -->
+            <div class="charge-card" id="ccard-dangerousGoods" hidden>
+              <div class="charge-card-hd">
+                <label class="toggle"><input type="checkbox" class="switch" id="dangerous-goods-on"></label>
+                <span class="charge-card-title">Dangerous Goods Fee</span>
+                <button type="button" class="ccard-remove" data-ckey="dangerousGoods">×</button>
+              </div>
+              <div class="charge-card-body">
+                <div class="field" style="max-width:200px;">
+                  <label for="dangerous-goods-amt">Amount ($)</label>
+                  <input type="number" class="fee-input" id="dangerous-goods-amt" min="0" step="0.01" value="150">
+                </div>
+              </div>
+            </div>
+
+            <!-- AES Filing Fee -->
+            <div class="charge-card" id="ccard-aesFilingFee" hidden>
+              <div class="charge-card-hd">
+                <label class="toggle"><input type="checkbox" class="switch" id="fee-aes-on"></label>
+                <span class="charge-card-title">AES Filing Fee</span>
+                <button type="button" class="ccard-remove" data-ckey="aesFilingFee">×</button>
+              </div>
+              <div class="charge-card-body">
+                <div class="field" style="max-width:200px;">
+                  <label for="fee-aes-amt">Amount ($)</label>
+                  <input type="number" class="fee-input" id="fee-aes-amt" min="0" step="0.01" value="75">
+                </div>
+              </div>
+            </div>
+
+            <!-- Airline UN Fee -->
+            <div class="charge-card" id="ccard-airlineUnFee" hidden>
+              <div class="charge-card-hd">
+                <label class="toggle"><input type="checkbox" class="switch" id="fee-airline-un-on"></label>
+                <span class="charge-card-title">Airline UN Fee</span>
+                <button type="button" class="ccard-remove" data-ckey="airlineUnFee">×</button>
+              </div>
+              <div class="charge-card-body">
+                <div class="field" style="max-width:200px;">
+                  <label for="fee-airline-un-amt">Amount ($)</label>
+                  <input type="number" class="fee-input" id="fee-airline-un-amt" min="0" step="0.01" value="150">
+                </div>
+              </div>
+            </div>
+
+          </div><!-- #chargeCards -->
         </section>
 
         <div class="actions">
@@ -1099,6 +1262,10 @@
           <span class="stat-label">Chargeable Weight <em>(greater of the two)</em></span>
           <span class="stat-value" id="stat-billable">0 lb</span>
         </div>
+        <div class="weight-stat">
+          <span class="stat-label">Volumetric Weight <em>(÷366, air freight kg)</em></span>
+          <span class="stat-value" id="stat-dim-kg">0 kg</span>
+        </div>
       </div>
     </div>
   </section>
@@ -1176,10 +1343,7 @@
           <input type="number" id="fuel-pickup-surcharge" min="0" step="0.1" value="0">
         </div>
       </div>
-      <div class="auto-calc-row" style="margin-top:12px;">
-        <label class="toggle"><input type="checkbox" class="switch" id="bill-fuel-pickup"></label>
-        <label for="bill-fuel-pickup">Bill Fuel Charge for Pickup</label>
-      </div>
+      <p class="section-note" style="margin-top:12px;">To bill this fuel charge, add the <strong>Fuel Charge (Pickup)</strong> card in the Charges section.</p>
       <p class="fuel-match-note" id="fuel-pickup-note">Enter a city above or set a manual Area override.</p>
       <div class="fuel-readout-grid">
         <div class="weight-stat">
@@ -1219,10 +1383,7 @@
           <input type="number" id="fuel-delivery-surcharge" min="0" step="0.1" value="0">
         </div>
       </div>
-      <div class="auto-calc-row" style="margin-top:12px;">
-        <label class="toggle"><input type="checkbox" class="switch" id="bill-fuel-delivery"></label>
-        <label for="bill-fuel-delivery">Bill Fuel Charge for Delivery</label>
-      </div>
+      <p class="section-note" style="margin-top:12px;">To bill this fuel charge, add the <strong>Fuel Charge (Delivery)</strong> card in the Charges section.</p>
       <p class="fuel-match-note" id="fuel-delivery-note">Enter a city above or set a manual Area override.</p>
       <div class="fuel-readout-grid">
         <div class="weight-stat">
@@ -1284,7 +1445,7 @@
   var API_BASE = '';  // same-origin backend
 
   // Dynamic ticket state
-  var DEFAULT_TICKET_ORDER = ['handling','ctpat','tsa','pickup','pickupFuel','liftgatePickup','manpowerPickup','airport','carriage','delivery','deliveryFuel','liftgateDelivery','manpowerDelivery','dangerousGoods','stdPallet','dblPallet','waiting','overtime'];
+  var DEFAULT_TICKET_ORDER = ['handling','ctpat','tsa','pickup','pickupFuel','liftgatePickup','manpowerPickup','airport','carriage','delivery','deliveryFuel','liftgateDelivery','manpowerDelivery','dangerousGoods','stdPallet','dblPallet','waiting','overtime','aesFilingFee','airlineUnFee'];
   var ticketOrder = DEFAULT_TICKET_ORDER.slice();
   var ticketOverrides = {};  // id → { label: null|string, amount: null|number }
   var customLines = [];      // [{ id, label, amount }]
@@ -1292,6 +1453,68 @@
   var customLineCounter = 0;
   var ticketInputFocused = false;
   var sortableInstance = null;
+
+  // Add-on charge card state
+  var addedCharges = {}; // ckey → true/false
+
+  var CHARGE_TOGGLE_IDS = {
+    pickup:          ['pickup-on'],
+    pickupFuel:      ['bill-fuel-pickup'],
+    manpowerPickup:  ['manpower-pickup-on'],
+    airport:         ['airport-on'],
+    carriage:        ['carriage-on'],
+    delivery:        ['delivery-on'],
+    deliveryFuel:    ['bill-fuel-delivery'],
+    manpowerDelivery:['manpower-delivery-on'],
+    liftgate:        ['liftgate-pickup-on','liftgate-delivery-on'],
+    palletizing:     ['stdpallet-on','dblpallet-on'],
+    waiting:         ['waiting-on'],
+    overtime:        ['overtime-on'],
+    dangerousGoods:  ['dangerous-goods-on'],
+    aesFilingFee:    ['fee-aes-on'],
+    airlineUnFee:    ['fee-airline-un-on']
+  };
+
+  function updateChipStates(){
+    document.querySelectorAll('.charge-chip').forEach(function(chip){
+      chip.disabled = !!addedCharges[chip.dataset.ckey];
+    });
+  }
+
+  function applyAddedCharges(ac){
+    addedCharges = ac || {};
+    document.querySelectorAll('.charge-card').forEach(function(card){
+      var key = card.id.replace('ccard-', '');
+      card.hidden = !addedCharges[key];
+    });
+    updateChipStates();
+  }
+
+  function addCharge(key){
+    addedCharges[key] = true;
+    var card = document.getElementById('ccard-' + key);
+    if(card) card.hidden = false;
+    var ids = CHARGE_TOGGLE_IDS[key] || [];
+    ids.forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.checked = true;
+    });
+    updateChipStates();
+    render();
+  }
+
+  function removeCharge(key){
+    addedCharges[key] = false;
+    var card = document.getElementById('ccard-' + key);
+    if(card) card.hidden = true;
+    var ids = CHARGE_TOGGLE_IDS[key] || [];
+    ids.forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.checked = false;
+    });
+    updateChipStates();
+    render();
+  }
 
   // Internal-only key for the History record — never shown to the user or
   // the client. The user's own Reference Number (if any) is a separate,
@@ -1522,7 +1745,7 @@
   // own dimensional-weight readout as a side effect.
   function computeCargo(){
     var divisor = dimDivisor();
-    var pieces = 0, actualWeightTotal = 0, dimWeightTotal = 0;
+    var pieces = 0, actualWeightTotal = 0, dimWeightTotal = 0, dimWeightKgTotal = 0;
     document.querySelectorAll('#pieceRows .piece-row').forEach(function(tr){
       var L = parseFloat(tr.querySelector('.piece-length').value) || 0;
       var W = parseFloat(tr.querySelector('.piece-width').value) || 0;
@@ -1533,10 +1756,12 @@
       pieces += 1;
       actualWeightTotal += Wt;
       dimWeightTotal += dimWt;
+      dimWeightKgTotal += (L * W * H) / 366;
     });
     return {
       pieces: pieces, shipmentType: currentShipmentType, divisor: divisor,
       actualWeightTotal: actualWeightTotal, dimWeightTotal: dimWeightTotal,
+      dimWeightKgTotal: dimWeightKgTotal,
       billableWeight: Math.max(actualWeightTotal, dimWeightTotal)
     };
   }
@@ -1653,11 +1878,17 @@
     var overtimeFee = num('overtime-amt');
     var overtimeAmt = overtimeOn ? overtimeFee : 0;
 
+    var aesFilingFeeOn = document.getElementById('fee-aes-on').checked;
+    var aesFilingFeeAmt = aesFilingFeeOn ? num('fee-aes-amt') : 0;
+    var airlineUnFeeOn = document.getElementById('fee-airline-un-on').checked;
+    var airlineUnFeeAmt = airlineUnFeeOn ? num('fee-airline-un-amt') : 0;
+
     var total = standardSub + groundSub + carriage.sell +
       liftGatePickupAmt + liftGateDeliveryAmt +
       manPowerPickupAmt + manPowerDeliveryAmt +
       dangerousGoodsAmt + stdPalletAmt + dblPalletAmt +
-      waitingAmt + overtimeAmt;
+      waitingAmt + overtimeAmt +
+      aesFilingFeeAmt + airlineUnFeeAmt;
 
     var originCity = document.getElementById('originCity').value.trim() || '—';
     var originState = document.getElementById('originState').value.trim().toUpperCase();
@@ -1672,7 +1903,8 @@
       destLabel: destState ? (destCity + ', ' + destState) : destCity,
       pieces: cargo.pieces, shipValue: num('shipValue'),
       shipmentType: cargo.shipmentType, divisor: cargo.divisor,
-      dimWeightTotal: cargo.dimWeightTotal, actualWeightTotal: cargo.actualWeightTotal, billableWeight: billableWt,
+      dimWeightTotal: cargo.dimWeightTotal, dimWeightKgTotal: cargo.dimWeightKgTotal,
+      actualWeightTotal: cargo.actualWeightTotal, billableWeight: billableWt,
       handlingOn: handlingOn, ctpatOn: ctpatOn, tsaOn: tsaOn,
       ctpat: ctpat, tsa: tsa, handling: handling, standardSub: standardSub,
       fuelPickupCity: fuelPickupCity, fuelPickupOverride: fuelPickupOverride, fuelPickupSurcharge: fuelPickupSurcharge,
@@ -1695,7 +1927,9 @@
       stdPalletOn: stdPalletOn, stdPalletRate: stdPalletRate, stdPalletQty: stdPalletQty, stdPalletAmt: stdPalletAmt,
       dblPalletOn: dblPalletOn, dblPalletRate: dblPalletRate, dblPalletQty: dblPalletQty, dblPalletAmt: dblPalletAmt,
       waitingOn: waitingOn, waitingRate: waitingRate, waitingHrs: waitingHrs, waitingAmt: waitingAmt,
-      overtimeOn: overtimeOn, overtimeFee: overtimeFee, overtimeAmt: overtimeAmt
+      overtimeOn: overtimeOn, overtimeFee: overtimeFee, overtimeAmt: overtimeAmt,
+      aesFilingFeeOn: aesFilingFeeOn, aesFilingFeeAmt: aesFilingFeeAmt,
+      airlineUnFeeOn: airlineUnFeeOn, airlineUnFeeAmt: airlineUnFeeAmt
     };
   }
 
@@ -1714,8 +1948,8 @@
       carriage:        { label:d.carriageLabel,          amount:d.carriage.sell,      billable:true, show:d.carriageOn },
       delivery:        { label:d.deliveryLabel,          amount:d.delivery.sell,      billable:true,  show:d.deliveryOn },
       deliveryFuel:    { label:'Fuel Charge (Delivery)', amount:d.deliveryFuelAmt,    billable:true,  show:d.deliveryOn && d.fuelDeliveryBillOn },
-      liftgateDelivery:{ label:'Lift Gate – Delivery', amount:d.liftGateDeliveryFee, billable:d.liftGateDeliveryOn, show:d.deliveryOn && d.liftGateDeliveryOn },
-      manpowerDelivery:{ label:'Man Power – Delivery', amount:d.manPowerDeliveryFee, billable:d.manPowerDeliveryOn, show:d.deliveryOn && d.manPowerDeliveryOn },
+      liftgateDelivery:{ label:'Lift Gate – Delivery', amount:d.liftGateDeliveryFee, billable:d.liftGateDeliveryOn, show:d.liftGateDeliveryOn },
+      manpowerDelivery:{ label:'Man Power – Delivery', amount:d.manPowerDeliveryFee, billable:d.manPowerDeliveryOn, show:d.manPowerDeliveryOn },
       dangerousGoods:  { label:'Dangerous Goods Fee',    amount:d.dangerousGoodsFee,  billable:d.dangerousGoodsOn },
       stdPallet:       { label:d.stdPalletQty > 0 ? 'Standard Pallet \xd7 ' + d.stdPalletQty : 'Standard Pallet',
                          amount:d.stdPalletAmt, billable:d.stdPalletQty > 0, show:d.stdPalletOn },
@@ -1724,6 +1958,8 @@
       waiting:         { label:d.waitingHrs > 0 ? 'Waiting Time (' + d.waitingHrs + ' hr)' : 'Waiting Time',
                          amount:d.waitingHrs > 0 ? d.waitingAmt : d.waitingRate, billable:d.waitingHrs > 0, show:d.waitingOn },
       overtime:        { label:'Overtime',               amount:d.overtimeFee,        billable:d.overtimeOn, show:d.overtimeOn },
+      aesFilingFee:    { label:'AES Filing Fee',          amount:d.aesFilingFeeAmt,   billable:d.aesFilingFeeOn, show:d.aesFilingFeeOn },
+      airlineUnFee:    { label:'Airline UN Fee',           amount:d.airlineUnFeeAmt,   billable:d.airlineUnFeeOn, show:d.airlineUnFeeOn },
     };
 
     var lines = [];
@@ -1938,6 +2174,7 @@
     text('stat-dim', fmtLb(d.dimWeightTotal));
     text('stat-billable', fmtLb(d.billableWeight));
     text('stat-divisor-note', '(÷' + d.divisor + ', ' + d.shipmentType + ')');
+    text('stat-dim-kg', d.dimWeightKgTotal.toFixed(1) + ' kg');
 
     document.getElementById('cargoSummaryLine').innerHTML =
       d.pieces + ' piece' + (d.pieces === 1 ? '' : 's') + ' · Actual ' + fmtLb(d.actualWeightTotal) +
@@ -2230,11 +2467,14 @@
       waitingOn: document.getElementById('waiting-on').checked,
       waitingRate: num('waiting-rate'), waitingHrs: num('waiting-hrs'),
       overtimeOn: document.getElementById('overtime-on').checked, overtimeAmt: num('overtime-amt'),
+      aesFilingFeeOn: document.getElementById('fee-aes-on').checked, aesFilingFeeAmt: num('fee-aes-amt'),
+      airlineUnFeeOn: document.getElementById('fee-airline-un-on').checked, airlineUnFeeAmt: num('fee-airline-un-amt'),
       deliveryOn: document.getElementById('delivery-on').checked,
       airportOn: document.getElementById('airport-on').checked,
       carriageOn: document.getElementById('carriage-on').checked,
       billFuelPickup: document.getElementById('bill-fuel-pickup').checked,
       billFuelDelivery: document.getElementById('bill-fuel-delivery').checked,
+      addedCharges: JSON.parse(JSON.stringify(addedCharges)),
       ticketOrder: ticketOrder.slice(),
       ticketOverrides: JSON.parse(JSON.stringify(ticketOverrides)),
       customLines: JSON.parse(JSON.stringify(customLines)),
@@ -2317,6 +2557,10 @@
     document.getElementById('waiting-rate').value = data.waitingRate != null ? data.waitingRate : 65;
     document.getElementById('waiting-hrs').value = data.waitingHrs != null ? data.waitingHrs : 0;
     document.getElementById('overtime-on').checked = !!data.overtimeOn;
+    document.getElementById('fee-aes-on').checked = !!data.aesFilingFeeOn;
+    document.getElementById('fee-aes-amt').value = data.aesFilingFeeAmt != null ? data.aesFilingFeeAmt : 75;
+    document.getElementById('fee-airline-un-on').checked = !!data.airlineUnFeeOn;
+    document.getElementById('fee-airline-un-amt').value = data.airlineUnFeeAmt != null ? data.airlineUnFeeAmt : 150;
     document.getElementById('overtime-amt').value = data.overtimeAmt != null ? data.overtimeAmt : 200;
 
     ticketOrder = (data.ticketOrder && data.ticketOrder.length) ? data.ticketOrder.slice() : DEFAULT_TICKET_ORDER.slice();
@@ -2324,14 +2568,35 @@
     customLines = data.customLines ? JSON.parse(JSON.stringify(data.customLines)) : [];
     customLineCounter = customLines.length ? Math.max.apply(null, customLines.map(function(c){ return parseInt(c.id.replace('custom-','')) || 0; })) : 0;
     deletedDefaultIds = data.deletedDefaultIds ? JSON.parse(JSON.stringify(data.deletedDefaultIds)) : {};
-    document.getElementById('delivery-on').checked = data.deliveryOn !== undefined ? !!data.deliveryOn : true;
-    document.getElementById('airport-on').checked = data.airportOn !== undefined ? !!data.airportOn : true;
-    document.getElementById('carriage-on').checked = data.carriageOn !== undefined ? !!data.carriageOn : true;
-    document.getElementById('bill-fuel-pickup').checked = data.billFuelPickup !== undefined ? !!data.billFuelPickup : true;
-    document.getElementById('bill-fuel-delivery').checked = data.billFuelDelivery !== undefined ? !!data.billFuelDelivery : true;
+    document.getElementById('delivery-on').checked = data.deliveryOn !== undefined ? !!data.deliveryOn : false;
+    document.getElementById('airport-on').checked = data.airportOn !== undefined ? !!data.airportOn : false;
+    document.getElementById('carriage-on').checked = data.carriageOn !== undefined ? !!data.carriageOn : false;
+    document.getElementById('bill-fuel-pickup').checked = data.billFuelPickup !== undefined ? !!data.billFuelPickup : false;
+    document.getElementById('bill-fuel-delivery').checked = data.billFuelDelivery !== undefined ? !!data.billFuelDelivery : false;
     document.getElementById('stdpallet-on').checked = data.stdPalletOn !== undefined ? !!data.stdPalletOn : false;
     document.getElementById('dblpallet-on').checked = data.dblPalletOn !== undefined ? !!data.dblPalletOn : false;
     document.getElementById('waiting-on').checked = data.waitingOn !== undefined ? !!data.waitingOn : false;
+
+    // Restore addedCharges — infer from toggle states for old records
+    var ac = (data.addedCharges && Object.keys(data.addedCharges).length) ? JSON.parse(JSON.stringify(data.addedCharges)) : {};
+    if(!Object.keys(ac).length){
+      if(data.pickupOn !== undefined ? !!data.pickupOn : false) ac.pickup = true;
+      if(data.billFuelPickup !== undefined ? !!data.billFuelPickup : false) ac.pickupFuel = true;
+      if(!!data.manPowerPickupOn) ac.manpowerPickup = true;
+      if(data.airportOn !== undefined ? !!data.airportOn : false) ac.airport = true;
+      if(data.carriageOn !== undefined ? !!data.carriageOn : false) ac.carriage = true;
+      if(data.deliveryOn !== undefined ? !!data.deliveryOn : false) ac.delivery = true;
+      if(data.billFuelDelivery !== undefined ? !!data.billFuelDelivery : false) ac.deliveryFuel = true;
+      if(!!data.manPowerDeliveryOn) ac.manpowerDelivery = true;
+      if(!!data.liftGatePickupOn || !!data.liftGateDeliveryOn || !!data.liftGateOn) ac.liftgate = true;
+      if(!!(data.stdPalletOn) || !!(data.dblPalletOn)) ac.palletizing = true;
+      if(data.waitingOn !== undefined ? !!data.waitingOn : false) ac.waiting = true;
+      if(!!data.overtimeOn) ac.overtime = true;
+      if(!!data.dangerousGoodsOn) ac.dangerousGoods = true;
+      if(!!data.aesFilingFeeOn) ac.aesFilingFee = true;
+      if(!!data.airlineUnFeeOn) ac.airlineUnFee = true;
+    }
+    applyAddedCharges(ac);
 
     quoteRecordId = recordId || makeRecordId();
     quoteDateStr = data.quoteDate || quoteDateStr;
@@ -2514,7 +2779,8 @@
    'fuel-delivery-city','fuel-delivery-area-override','fuel-delivery-surcharge',
    'originCity','originState','destCity','destState','shipValue','refNumber',
    'pickup-on','delivery-on','airport-on','carriage-on','bill-fuel-pickup','bill-fuel-delivery',
-   'stdpallet-on','dblpallet-on','waiting-on'
+   'stdpallet-on','dblpallet-on','waiting-on',
+   'fee-aes-on','fee-aes-amt','fee-airline-un-on','fee-airline-un-amt'
   ].forEach(function(id){
     var el = document.getElementById(id);
     el.addEventListener('input', render);
@@ -2555,12 +2821,15 @@
     document.getElementById('stdpallet-on').checked = false;
     document.getElementById('dblpallet-on').checked = false;
     document.getElementById('waiting-on').checked = false;
+    document.getElementById('fee-aes-on').checked = false;
+    document.getElementById('fee-airline-un-on').checked = false;
     document.getElementById('carriage').value = '0';
     ticketOrder = DEFAULT_TICKET_ORDER.slice();
     ticketOverrides = {};
     customLines = [];
     customLineCounter = 0;
     deletedDefaultIds = {};
+    applyAddedCharges({});
     seedDefaultPieces();
     stampHeader();
     render();
@@ -2602,6 +2871,8 @@
     document.getElementById('liftgate-delivery-on').checked = false;
     document.getElementById('dangerous-goods-on').checked = false;
     document.getElementById('overtime-on').checked = false;
+    document.getElementById('fee-aes-on').checked = false;
+    document.getElementById('fee-airline-un-on').checked = false;
     document.getElementById('std-pallet-qty').value = '0';
     document.getElementById('dbl-pallet-qty').value = '0';
     document.getElementById('waiting-hrs').value = '0';
@@ -2619,10 +2890,19 @@
     customLines = [];
     customLineCounter = 0;
     deletedDefaultIds = {};
+    applyAddedCharges({});
     clearPieceRows();
     addPieceRow();
     stampHeader();
     render();
+  });
+
+  // Charge chip + card-remove wiring
+  document.querySelectorAll('.charge-chip').forEach(function(chip){
+    chip.addEventListener('click', function(){ addCharge(chip.dataset.ckey); });
+  });
+  document.querySelectorAll('.ccard-remove').forEach(function(btn){
+    btn.addEventListener('click', function(){ removeCharge(btn.dataset.ckey); });
   });
 
   document.getElementById('addCustomLineBtn').addEventListener('click', function(){
