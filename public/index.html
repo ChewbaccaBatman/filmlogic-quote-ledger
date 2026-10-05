@@ -306,12 +306,22 @@
   .var-item + .var-item{ margin-top:20px; padding-top:20px; border-top:1px dashed var(--line-strong); }
   .var-row{ display:grid; grid-template-columns:1fr 110px; gap:16px; }
   @media (max-width:520px){ .var-row{ grid-template-columns:1fr; } }
-  .sell-preview{ margin-top:8px; font-size:.82rem; color:var(--ink-soft); }
-  .sell-preview strong{
-    font-family:'IBM Plex Mono', monospace; font-variant-numeric:tabular-nums;
-    color:var(--teal); font-weight:600;
+  .sell-preview{
+    display:flex; flex-direction:column; align-items:flex-end;
+    margin-top:12px; padding:10px 14px;
+    background:color-mix(in srgb, var(--teal) 6%, transparent);
+    border-radius:var(--radius-sm);
   }
-  .internal-flag{ color:var(--ink-faint); font-size:.74rem; }
+  .sell-label{
+    font-size:.68rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.09em; color:var(--ink-soft); margin-bottom:2px;
+  }
+  .sell-preview strong{
+    font-family:'Oswald', sans-serif; font-variant-numeric:tabular-nums;
+    color:var(--teal); font-weight:700; font-size:1.6rem; line-height:1;
+  }
+  .internal-flag{ display:none; }
+  .carriage-min-note{ font-size:.72rem; color:var(--ink-faint); text-align:right; margin-top:4px; }
   .charge-preview{ margin-top:8px; font-size:.82rem; color:var(--ink-soft); }
   .charge-preview strong{
     font-family:'IBM Plex Mono', monospace; font-variant-numeric:tabular-nums;
@@ -323,7 +333,7 @@
     display:flex;
     flex-wrap:wrap;
     gap:8px;
-    padding:4px 0 20px;
+    padding:20px 0 4px;
   }
   .charge-chip{
     display:inline-flex;
@@ -394,25 +404,21 @@
   }
   .charge-card-title-input:focus{ outline:none; border-bottom-color:var(--teal); }
   .ticket-profit{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:7px 12px;
+    display:flex; flex-direction:column; align-items:flex-end;
+    padding:10px 18px;
     background:color-mix(in srgb, var(--teal) 7%, transparent);
     border:1px dashed var(--teal);
     border-radius:var(--radius-sm);
     margin-top:8px;
-    font-size:.75rem;
-    color:var(--ink-soft);
   }
   .ticket-profit strong{
-    font-family:'IBM Plex Mono', monospace;
-    font-variant-numeric:tabular-nums;
-    color:var(--teal);
-    font-weight:600;
-    font-size:.82rem;
+    font-family:'Oswald', sans-serif; font-variant-numeric:tabular-nums;
+    color:var(--teal); font-weight:700; font-size:1.6rem; line-height:1;
   }
-  .ticket-profit-label{ opacity:.7; }
+  .ticket-profit-label{
+    font-size:.68rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.09em; color:var(--ink-soft); margin-bottom:2px;
+  }
 
   /* ---------- Weight calculator ---------- */
   .weight-calc{ margin-top:20px; padding-top:20px; border-top:1px dashed var(--line-strong); }
@@ -874,10 +880,14 @@
               <span class="fee-name">CTPAT Fee</span>
               <input type="number" class="fee-input" id="fee-ctpat-amt" min="0" step="0.01" value="25">
             </li>
-            <li>
+            <li id="fee-tsa-row">
               <label class="toggle"><input type="checkbox" class="switch" id="fee-tsa" checked></label>
               <span class="fee-name">TSA Cyber Security Fee</span>
               <input type="number" class="fee-input" id="fee-tsa-amt" min="0" step="0.01" value="12.50">
+            </li>
+            <li>
+              <label class="toggle"><input type="checkbox" class="switch" id="fee-netflix"></label>
+              <span class="fee-name">Netflix <em style="font-style:italic;font-size:.78rem;color:var(--ink-faint);">sets Handling $65, hides TSA</em></span>
             </li>
           </ul>
         </section>
@@ -886,25 +896,6 @@
           <div class="block-head">
             <h2><span class="step">03</span> Charges</h2>
             <p class="section-note">Click a chip to add a charge. Cost &amp; margin fields are internal — only the sell price reaches the client copy.</p>
-          </div>
-
-          <div class="charge-chips">
-            <button type="button" class="charge-chip" data-ckey="pickup">+ Pickup</button>
-            <button type="button" class="charge-chip" data-ckey="pickupFuel">+ Fuel Charge (Pickup)</button>
-            <button type="button" class="charge-chip" data-ckey="manpowerPickup">+ Man Power – Pickup</button>
-            <button type="button" class="charge-chip" data-ckey="airport">+ Airport Transfer</button>
-            <button type="button" class="charge-chip" data-ckey="carriage">+ Mode of Transportation</button>
-            <button type="button" class="charge-chip" data-ckey="delivery">+ Delivery</button>
-            <button type="button" class="charge-chip" data-ckey="deliveryFuel">+ Fuel Charge (Delivery)</button>
-            <button type="button" class="charge-chip" data-ckey="manpowerDelivery">+ Man Power – Delivery</button>
-            <button type="button" class="charge-chip" data-ckey="liftgate">+ Lift Gate</button>
-            <button type="button" class="charge-chip" data-ckey="palletizing">+ Palletizing</button>
-            <button type="button" class="charge-chip" data-ckey="waiting">+ Waiting Time</button>
-            <button type="button" class="charge-chip" data-ckey="overtime">+ Overtime Fee</button>
-            <button type="button" class="charge-chip" data-ckey="dangerousGoods">+ Dangerous Goods</button>
-            <button type="button" class="charge-chip" data-ckey="aesFilingFee">+ AES Filing Fee</button>
-            <button type="button" class="charge-chip" data-ckey="airlineUnFee">+ Airline UN Fee</button>
-            <button type="button" class="charge-chip" data-ckey="customItem">+ Custom Item</button>
           </div>
 
           <div id="chargeCards">
@@ -932,7 +923,7 @@
                   <div class="field"><label for="pickup">Cost ($)</label><input type="number" id="pickup" min="0" step="0.01" value="0"></div>
                   <div class="field"><label for="pickup-margin">Margin (%)</label><input type="number" id="pickup-margin" min="0" max="300" step="0.1" value="50"></div>
                 </div>
-                <p class="sell-preview">Sell → <strong id="pickup-sell">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
+                <div class="sell-preview"><span class="sell-label">Sell Price</span><strong id="pickup-sell">$0.00</strong></div>
                 <div class="fuel-summary-box" style="margin-top:12px;">
                   <span class="fuel-summary-label">Fuel Charge</span>
                   <span class="fuel-summary-status" id="pickup-fuel-summary">—</span>
@@ -957,7 +948,7 @@
                   <div class="field"><label for="fuel-pickup-cost-input">Cost ($)</label><input type="number" id="fuel-pickup-cost-input" min="0" step="0.01" value="0"></div>
                   <div class="field"><label for="fuel-pickup-charge-margin">Margin (%)</label><input type="number" id="fuel-pickup-charge-margin" min="0" max="300" step="0.1" value="0"></div>
                 </div>
-                <p class="sell-preview">Sell → <strong id="fuel-pickup-sell-preview">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
+                <div class="sell-preview"><span class="sell-label">Sell Price</span><strong id="fuel-pickup-sell-preview">$0.00</strong></div>
               </div>
             </div>
 
@@ -992,7 +983,7 @@
                   <div class="field"><label for="airportTransfer">Cost ($)</label><input type="number" id="airportTransfer" min="0" step="0.01" value="0"></div>
                   <div class="field"><label for="airportTransfer-margin">Margin (%)</label><input type="number" id="airportTransfer-margin" min="0" max="300" step="0.1" value="50"></div>
                 </div>
-                <p class="sell-preview">Sell → <strong id="airportTransfer-sell">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
+                <div class="sell-preview"><span class="sell-label">Sell Price</span><strong id="airportTransfer-sell">$0.00</strong></div>
               </div>
             </div>
 
@@ -1024,7 +1015,8 @@
                   <div class="field"><label for="carriage-margin">Margin (%)</label><input type="number" id="carriage-margin" min="0" max="300" step="0.1" value="50"></div>
                 </div>
                 <p class="section-note" id="carriageMinNote">Airfreight carries a $350 minimum charge.</p>
-                <p class="sell-preview">Sell → <strong id="carriage-sell">$0.00</strong> <span class="internal-flag" id="carriage-min-flag" hidden>($350 min applied)</span> <span class="internal-flag">(not shown to client)</span></p>
+                <div class="sell-preview"><span class="sell-label">Sell Price</span><strong id="carriage-sell">$0.00</strong></div>
+                <p class="carriage-min-note" id="carriage-min-flag" hidden>$350 min applied</p>
               </div>
             </div>
 
@@ -1051,7 +1043,7 @@
                   <div class="field"><label for="delivery">Cost ($)</label><input type="number" id="delivery" min="0" step="0.01" value="0"></div>
                   <div class="field"><label for="delivery-margin">Margin (%)</label><input type="number" id="delivery-margin" min="0" max="300" step="0.1" value="50"></div>
                 </div>
-                <p class="sell-preview">Sell → <strong id="delivery-sell">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
+                <div class="sell-preview"><span class="sell-label">Sell Price</span><strong id="delivery-sell">$0.00</strong></div>
                 <div class="fuel-summary-box" style="margin-top:12px;">
                   <span class="fuel-summary-label">Fuel Charge</span>
                   <span class="fuel-summary-status" id="delivery-fuel-summary">—</span>
@@ -1076,7 +1068,7 @@
                   <div class="field"><label for="fuel-delivery-cost-input">Cost ($)</label><input type="number" id="fuel-delivery-cost-input" min="0" step="0.01" value="0"></div>
                   <div class="field"><label for="fuel-delivery-charge-margin">Margin (%)</label><input type="number" id="fuel-delivery-charge-margin" min="0" max="300" step="0.1" value="0"></div>
                 </div>
-                <p class="sell-preview">Sell → <strong id="fuel-delivery-sell-preview">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>
+                <div class="sell-preview"><span class="sell-label">Sell Price</span><strong id="fuel-delivery-sell-preview">$0.00</strong></div>
               </div>
             </div>
 
@@ -1222,6 +1214,25 @@
             </div>
 
           </div><!-- #chargeCards -->
+
+          <div class="charge-chips">
+            <button type="button" class="charge-chip" data-ckey="pickup">+ Pickup</button>
+            <button type="button" class="charge-chip" data-ckey="pickupFuel">+ Fuel Charge (Pickup)</button>
+            <button type="button" class="charge-chip" data-ckey="manpowerPickup">+ Man Power – Pickup</button>
+            <button type="button" class="charge-chip" data-ckey="airport">+ Airport Transfer</button>
+            <button type="button" class="charge-chip" data-ckey="carriage">+ Mode of Transportation</button>
+            <button type="button" class="charge-chip" data-ckey="delivery">+ Delivery</button>
+            <button type="button" class="charge-chip" data-ckey="deliveryFuel">+ Fuel Charge (Delivery)</button>
+            <button type="button" class="charge-chip" data-ckey="manpowerDelivery">+ Man Power – Delivery</button>
+            <button type="button" class="charge-chip" data-ckey="liftgate">+ Lift Gate</button>
+            <button type="button" class="charge-chip" data-ckey="palletizing">+ Palletizing</button>
+            <button type="button" class="charge-chip" data-ckey="waiting">+ Waiting Time</button>
+            <button type="button" class="charge-chip" data-ckey="overtime">+ Overtime Fee</button>
+            <button type="button" class="charge-chip" data-ckey="dangerousGoods">+ Dangerous Goods</button>
+            <button type="button" class="charge-chip" data-ckey="aesFilingFee">+ AES Filing Fee</button>
+            <button type="button" class="charge-chip" data-ckey="airlineUnFee">+ Airline UN Fee</button>
+            <button type="button" class="charge-chip" data-ckey="customItem">+ Custom Item</button>
+          </div>
         </section>
 
         <div class="actions">
@@ -1518,6 +1529,7 @@
   var addedCharges = {}; // ckey → true/false
   var customCardItems = []; // [{ id, label, cost, margin, on }]
   var customCardCounter = 0;
+  var netflixHandlingBackup = 95; // stores pre-Netflix handling amount
 
   var CHARGE_TOGGLE_IDS = {
     pickup:          ['pickup-on'],
@@ -1542,6 +1554,23 @@
       if(chip.dataset.ckey === 'customItem') return; // always enabled
       chip.disabled = !!addedCharges[chip.dataset.ckey];
     });
+  }
+
+  function applyNetflix(on){
+    var handlingAmt = document.getElementById('fee-handling-amt');
+    var tsaCheck = document.getElementById('fee-tsa');
+    var tsaRow = document.getElementById('fee-tsa-row');
+    if(on){
+      netflixHandlingBackup = parseFloat(handlingAmt.value) || 95;
+      handlingAmt.value = '65';
+      tsaCheck.checked = false;
+      if(tsaRow) tsaRow.hidden = true;
+    } else {
+      handlingAmt.value = String(netflixHandlingBackup);
+      tsaCheck.checked = true;
+      if(tsaRow) tsaRow.hidden = false;
+    }
+    render();
   }
 
   function applyAddedCharges(ac){
@@ -1601,7 +1630,7 @@
           '<div class="field"><label for="' + item.id + '-margin">Margin (%)</label>' +
           '<input type="number" id="' + item.id + '-margin" min="0" max="300" step="0.1" value="' + (item.margin || 0) + '"></div>' +
         '</div>' +
-        '<p class="sell-preview">Sell → <strong id="' + item.id + '-sell">$0.00</strong> <span class="internal-flag">(not shown to client)</span></p>' +
+        '<div class="sell-preview"><span class="sell-label">Sell Price</span><strong id="' + item.id + '-sell">$0.00</strong></div>' +
       '</div>';
     return card;
   }
@@ -2624,6 +2653,8 @@
       feeCtpatOn: document.getElementById('fee-ctpat').checked, feeCtpatAmt: num('fee-ctpat-amt'),
       feeTsaOn: document.getElementById('fee-tsa').checked, feeTsaAmt: num('fee-tsa-amt'),
       feeHandlingOn: document.getElementById('fee-handling').checked, feeHandlingAmt: num('fee-handling-amt'),
+      netflixOn: document.getElementById('fee-netflix').checked,
+      netflixHandlingBackup: netflixHandlingBackup,
       pickupTransportType: currentPickupTransport,
       pickupOn: document.getElementById('pickup-on').checked,
       pickup: num('pickup'), pickupMargin: num('pickup-margin'),
@@ -2701,6 +2732,19 @@
     document.getElementById('fee-tsa-amt').value = data.feeTsaAmt != null ? data.feeTsaAmt : 12.5;
     document.getElementById('fee-handling').checked = !!data.feeHandlingOn;
     document.getElementById('fee-handling-amt').value = data.feeHandlingAmt != null ? data.feeHandlingAmt : 95;
+    // Netflix: restore backup then apply state (sets handling/TSA correctly)
+    netflixHandlingBackup = data.netflixHandlingBackup != null ? data.netflixHandlingBackup : 95;
+    var netflixEl = document.getElementById('fee-netflix');
+    netflixEl.checked = !!data.netflixOn;
+    if(data.netflixOn){
+      document.getElementById('fee-handling-amt').value = data.feeHandlingAmt != null ? data.feeHandlingAmt : 65;
+      document.getElementById('fee-tsa').checked = false;
+      var tsaRow = document.getElementById('fee-tsa-row');
+      if(tsaRow) tsaRow.hidden = true;
+    } else {
+      var tsaRow2 = document.getElementById('fee-tsa-row');
+      if(tsaRow2) tsaRow2.hidden = false;
+    }
 
     setPickupTransport(data.pickupTransportType || 'In Van');
     document.getElementById('pickup-on').checked = data.pickupOn !== undefined ? !!data.pickupOn : true;
@@ -3039,6 +3083,12 @@
     document.getElementById('waiting-on').checked = false;
     document.getElementById('fee-aes-on').checked = false;
     document.getElementById('fee-airline-un-on').checked = false;
+    document.getElementById('fee-netflix').checked = false;
+    netflixHandlingBackup = 95;
+    document.getElementById('fee-tsa').checked = true;
+    document.getElementById('fee-handling-amt').value = '95';
+    var tsaRowR = document.getElementById('fee-tsa-row');
+    if(tsaRowR) tsaRowR.hidden = false;
     document.getElementById('carriage').value = '0';
     ticketOrder = DEFAULT_TICKET_ORDER.slice();
     ticketOverrides = {};
@@ -3090,6 +3140,12 @@
     document.getElementById('overtime-on').checked = false;
     document.getElementById('fee-aes-on').checked = false;
     document.getElementById('fee-airline-un-on').checked = false;
+    document.getElementById('fee-netflix').checked = false;
+    netflixHandlingBackup = 95;
+    document.getElementById('fee-tsa').checked = true;
+    document.getElementById('fee-handling-amt').value = '95';
+    var tsaRowN = document.getElementById('fee-tsa-row');
+    if(tsaRowN) tsaRowN.hidden = false;
     document.getElementById('std-pallet-qty').value = '0';
     document.getElementById('dbl-pallet-qty').value = '0';
     document.getElementById('waiting-hrs').value = '0';
@@ -3113,6 +3169,10 @@
     addPieceRow();
     stampHeader();
     render();
+  });
+
+  document.getElementById('fee-netflix').addEventListener('change', function(){
+    applyNetflix(this.checked);
   });
 
   // Charge chip + card-remove wiring
