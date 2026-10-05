@@ -952,17 +952,33 @@
               </div>
             </div>
 
-            <!-- Man Power – Pickup -->
-            <div class="charge-card" id="ccard-manpowerPickup" hidden>
+            <!-- Man Power (combined) -->
+            <div class="charge-card" id="ccard-manpower" hidden>
               <div class="charge-card-hd">
-                <label class="toggle"><input type="checkbox" class="switch" id="manpower-pickup-on"></label>
-                <span class="charge-card-title">Man Power – Pickup</span>
-                <button type="button" class="ccard-remove" data-ckey="manpowerPickup">×</button>
+                <label class="toggle"><input type="checkbox" class="switch" id="manpower-on"></label>
+                <span class="charge-card-title">Man Power</span>
+                <button type="button" class="ccard-remove" data-ckey="manpower">×</button>
               </div>
               <div class="charge-card-body">
-                <div class="field" style="max-width:200px;">
-                  <label for="manpower-pickup-amt">Amount ($)</label>
-                  <input type="number" class="fee-input" id="manpower-pickup-amt" min="0" step="0.01" value="200">
+                <div class="auto-calc-row">
+                  <label class="toggle"><input type="checkbox" class="switch" id="manpower-pickup-on"></label>
+                  <label for="manpower-pickup-on" style="font-weight:600;color:var(--ink);">At Pickup</label>
+                </div>
+                <div id="manpower-pickup-fields" style="margin-top:10px;margin-bottom:16px;">
+                  <div class="field" style="max-width:200px;">
+                    <label for="manpower-pickup-amt">Amount ($)</label>
+                    <input type="number" class="fee-input" id="manpower-pickup-amt" min="0" step="0.01" value="200">
+                  </div>
+                </div>
+                <div class="auto-calc-row">
+                  <label class="toggle"><input type="checkbox" class="switch" id="manpower-delivery-on"></label>
+                  <label for="manpower-delivery-on" style="font-weight:600;color:var(--ink);">At Delivery</label>
+                </div>
+                <div id="manpower-delivery-fields" style="margin-top:10px;">
+                  <div class="field" style="max-width:200px;">
+                    <label for="manpower-delivery-amt">Amount ($)</label>
+                    <input type="number" class="fee-input" id="manpower-delivery-amt" min="0" step="0.01" value="200">
+                  </div>
                 </div>
               </div>
             </div>
@@ -1069,21 +1085,6 @@
                   <div class="field"><label for="fuel-delivery-charge-margin">Margin (%)</label><input type="number" id="fuel-delivery-charge-margin" min="0" max="300" step="0.1" value="0"></div>
                 </div>
                 <div class="sell-preview"><span class="sell-label">Sell Price</span><strong id="fuel-delivery-sell-preview">$0.00</strong></div>
-              </div>
-            </div>
-
-            <!-- Man Power – Delivery -->
-            <div class="charge-card" id="ccard-manpowerDelivery" hidden>
-              <div class="charge-card-hd">
-                <label class="toggle"><input type="checkbox" class="switch" id="manpower-delivery-on"></label>
-                <span class="charge-card-title">Man Power – Delivery</span>
-                <button type="button" class="ccard-remove" data-ckey="manpowerDelivery">×</button>
-              </div>
-              <div class="charge-card-body">
-                <div class="field" style="max-width:200px;">
-                  <label for="manpower-delivery-amt">Amount ($)</label>
-                  <input type="number" class="fee-input" id="manpower-delivery-amt" min="0" step="0.01" value="200">
-                </div>
               </div>
             </div>
 
@@ -1218,12 +1219,11 @@
           <div class="charge-chips">
             <button type="button" class="charge-chip" data-ckey="pickup">+ Pickup</button>
             <button type="button" class="charge-chip" data-ckey="pickupFuel">+ Fuel Charge (Pickup)</button>
-            <button type="button" class="charge-chip" data-ckey="manpowerPickup">+ Man Power – Pickup</button>
+            <button type="button" class="charge-chip" data-ckey="manpower">+ Man Power</button>
             <button type="button" class="charge-chip" data-ckey="airport">+ Airport Transfer</button>
             <button type="button" class="charge-chip" data-ckey="carriage">+ Mode of Transportation</button>
             <button type="button" class="charge-chip" data-ckey="delivery">+ Delivery</button>
             <button type="button" class="charge-chip" data-ckey="deliveryFuel">+ Fuel Charge (Delivery)</button>
-            <button type="button" class="charge-chip" data-ckey="manpowerDelivery">+ Man Power – Delivery</button>
             <button type="button" class="charge-chip" data-ckey="liftgate">+ Lift Gate</button>
             <button type="button" class="charge-chip" data-ckey="palletizing">+ Palletizing</button>
             <button type="button" class="charge-chip" data-ckey="waiting">+ Waiting Time</button>
@@ -1534,12 +1534,11 @@
   var CHARGE_TOGGLE_IDS = {
     pickup:          ['pickup-on'],
     pickupFuel:      ['bill-fuel-pickup'],
-    manpowerPickup:  ['manpower-pickup-on'],
+    manpower:        ['manpower-on','manpower-pickup-on','manpower-delivery-on'],
     airport:         ['airport-on'],
     carriage:        ['carriage-on'],
     delivery:        ['delivery-on'],
     deliveryFuel:    ['bill-fuel-delivery'],
-    manpowerDelivery:['manpower-delivery-on'],
     liftgate:        ['liftgate-pickup-on','liftgate-delivery-on'],
     palletizing:     ['stdpallet-on','dblpallet-on'],
     waiting:         ['waiting-on'],
@@ -2025,11 +2024,12 @@
     var liftGateDeliveryFee = num('liftgate-delivery-amt');
     var liftGateDeliveryAmt = liftGateDeliveryOn ? liftGateDeliveryFee : 0;
 
-    var manPowerPickupOn = document.getElementById('manpower-pickup-on').checked;
+    var manpowerCardOn = document.getElementById('manpower-on').checked;
+    var manPowerPickupOn = manpowerCardOn && document.getElementById('manpower-pickup-on').checked;
     var manPowerPickupFee = num('manpower-pickup-amt');
     var manPowerPickupAmt = manPowerPickupOn ? manPowerPickupFee : 0;
 
-    var manPowerDeliveryOn = document.getElementById('manpower-delivery-on').checked;
+    var manPowerDeliveryOn = manpowerCardOn && document.getElementById('manpower-delivery-on').checked;
     var manPowerDeliveryFee = num('manpower-delivery-amt');
     var manPowerDeliveryAmt = manPowerDeliveryOn ? manPowerDeliveryFee : 0;
 
@@ -2127,7 +2127,7 @@
       deliveryFuel:    { label:'Fuel Charge (Delivery)', amount:d.fuelDeliveryItem.sell, billable:true, show:d.deliveryOn && d.fuelDeliveryBillOn },
       liftgateDelivery:{ label:'Lift Gate – Delivery', amount:d.liftGateDeliveryFee, billable:d.liftGateDeliveryOn, show:d.liftGateDeliveryOn },
       manpowerDelivery:{ label:'Man Power – Delivery', amount:d.manPowerDeliveryFee, billable:d.manPowerDeliveryOn, show:d.manPowerDeliveryOn },
-      dangerousGoods:  { label:'Dangerous Goods Fee',    amount:d.dangerousGoodsFee,  billable:d.dangerousGoodsOn },
+      dangerousGoods:  { label:'Dangerous Goods Fee',    amount:d.dangerousGoodsFee,  billable:d.dangerousGoodsOn, show:d.dangerousGoodsOn },
       stdPallet:       { label:d.stdPalletQty > 0 ? 'Standard Pallet \xd7 ' + d.stdPalletQty : 'Standard Pallet',
                          amount:d.stdPalletAmt, billable:d.stdPalletQty > 0, show:d.stdPalletOn },
       dblPallet:       { label:d.dblPalletQty > 0 ? 'Double Pallet \xd7 ' + d.dblPalletQty : 'Double Pallet',
@@ -2374,8 +2374,21 @@
       if(el) el.textContent = fmt(sell);
     });
 
+    // Man Power sub-field visibility
+    var mpPickupOn = document.getElementById('manpower-pickup-on').checked;
+    var mpDeliveryOn = document.getElementById('manpower-delivery-on').checked;
+    var mpPickupFields = document.getElementById('manpower-pickup-fields');
+    var mpDeliveryFields = document.getElementById('manpower-delivery-fields');
+    if(mpPickupFields) mpPickupFields.hidden = !mpPickupOn;
+    if(mpDeliveryFields) mpDeliveryFields.hidden = !mpDeliveryOn;
+
     // Internal profit (not sent to email/PDF)
     var profit = 0;
+    // Standard fees: full amount = profit (no separate cost tracked)
+    profit += d.ctpat + d.tsa + d.handling;
+    // AES and Airline UN also have no separate cost
+    profit += d.aesFilingFeeAmt + d.airlineUnFeeAmt;
+    // Cost+margin lines
     if(d.pickupOn) profit += d.pickup.sell - d.pickup.cost;
     if(d.airportOn) profit += d.airport.sell - d.airport.cost;
     if(d.deliveryOn) profit += d.delivery.sell - d.delivery.cost;
@@ -2674,6 +2687,7 @@
       carriage: num('carriage'), carriageMargin: num('carriage-margin'),
       liftGatePickupOn: document.getElementById('liftgate-pickup-on').checked, liftGatePickupAmt: num('liftgate-pickup-amt'),
       liftGateDeliveryOn: document.getElementById('liftgate-delivery-on').checked, liftGateDeliveryAmt: num('liftgate-delivery-amt'),
+      manpowerOn: document.getElementById('manpower-on').checked,
       manPowerPickupOn: document.getElementById('manpower-pickup-on').checked, manPowerPickupAmt: num('manpower-pickup-amt'),
       manPowerDeliveryOn: document.getElementById('manpower-delivery-on').checked, manPowerDeliveryAmt: num('manpower-delivery-amt'),
       dangerousGoodsOn: document.getElementById('dangerous-goods-on').checked, dangerousGoodsAmt: num('dangerous-goods-amt'),
@@ -2778,9 +2792,11 @@
     document.getElementById('liftgate-delivery-on').checked = !!data.liftGateDeliveryOn;
     document.getElementById('liftgate-delivery-amt').value = data.liftGateDeliveryAmt != null ? data.liftGateDeliveryAmt : 55;
 
-    document.getElementById('manpower-pickup-on').checked = !!data.manPowerPickupOn;
+    // manpowerOn: new field; old records infer from sub-toggles
+    document.getElementById('manpower-on').checked = data.manpowerOn != null ? !!data.manpowerOn : (!!data.manPowerPickupOn || !!data.manPowerDeliveryOn);
+    document.getElementById('manpower-pickup-on').checked = data.manPowerPickupOn !== undefined ? !!data.manPowerPickupOn : true;
     document.getElementById('manpower-pickup-amt').value = data.manPowerPickupAmt != null ? data.manPowerPickupAmt : 200;
-    document.getElementById('manpower-delivery-on').checked = !!data.manPowerDeliveryOn;
+    document.getElementById('manpower-delivery-on').checked = data.manPowerDeliveryOn !== undefined ? !!data.manPowerDeliveryOn : true;
     document.getElementById('manpower-delivery-amt').value = data.manPowerDeliveryAmt != null ? data.manPowerDeliveryAmt : 200;
 
     document.getElementById('dangerous-goods-on').checked = !!data.dangerousGoodsOn;
@@ -2817,15 +2833,16 @@
 
     // Restore addedCharges — infer from toggle states for old records
     var ac = (data.addedCharges && Object.keys(data.addedCharges).length) ? JSON.parse(JSON.stringify(data.addedCharges)) : {};
+    // Migrate old manpowerPickup/manpowerDelivery keys to unified manpower key
+    if(ac.manpowerPickup || ac.manpowerDelivery){ ac.manpower = true; delete ac.manpowerPickup; delete ac.manpowerDelivery; }
     if(!Object.keys(ac).length){
       if(data.pickupOn !== undefined ? !!data.pickupOn : false) ac.pickup = true;
       if(data.billFuelPickup !== undefined ? !!data.billFuelPickup : false) ac.pickupFuel = true;
-      if(!!data.manPowerPickupOn) ac.manpowerPickup = true;
+      if(!!data.manPowerPickupOn || !!data.manPowerDeliveryOn) ac.manpower = true;
       if(data.airportOn !== undefined ? !!data.airportOn : false) ac.airport = true;
       if(data.carriageOn !== undefined ? !!data.carriageOn : false) ac.carriage = true;
       if(data.deliveryOn !== undefined ? !!data.deliveryOn : false) ac.delivery = true;
       if(data.billFuelDelivery !== undefined ? !!data.billFuelDelivery : false) ac.deliveryFuel = true;
-      if(!!data.manPowerDeliveryOn) ac.manpowerDelivery = true;
       if(!!data.liftGatePickupOn || !!data.liftGateDeliveryOn || !!data.liftGateOn) ac.liftgate = true;
       if(!!(data.stdPalletOn) || !!(data.dblPalletOn)) ac.palletizing = true;
       if(data.waitingOn !== undefined ? !!data.waitingOn : false) ac.waiting = true;
@@ -3025,7 +3042,7 @@
   // Wire up all inputs
   ['fee-ctpat','fee-ctpat-amt','fee-tsa','fee-tsa-amt','fee-handling','fee-handling-amt',
    'liftgate-pickup-on','liftgate-pickup-amt','liftgate-delivery-on','liftgate-delivery-amt',
-   'manpower-pickup-on','manpower-pickup-amt','manpower-delivery-on','manpower-delivery-amt',
+   'manpower-on','manpower-pickup-on','manpower-pickup-amt','manpower-delivery-on','manpower-delivery-amt',
    'dangerous-goods-on','dangerous-goods-amt',
    'std-pallet-rate','std-pallet-qty','dbl-pallet-rate','dbl-pallet-qty',
    'waiting-rate','waiting-hrs','overtime-on','overtime-amt',
@@ -3132,6 +3149,7 @@
     ['pickup-margin','airportTransfer-margin','carriage-margin','delivery-margin'].forEach(function(id){
       document.getElementById(id).value = '50';
     });
+    document.getElementById('manpower-on').checked = false;
     document.getElementById('manpower-pickup-on').checked = false;
     document.getElementById('manpower-delivery-on').checked = false;
     document.getElementById('liftgate-pickup-on').checked = false;
