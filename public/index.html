@@ -1797,8 +1797,8 @@
   }
 
   function computeSell(cost, margin){
-    // Gross-margin formula: sell = cost ÷ (1 − margin%)
-    return (margin < 100) ? cost / (1 - margin / 100) : cost;
+    // Markup formula: sell = cost × (1 + margin%)
+    return cost * (1 + margin / 100);
   }
 
   function lineItem(costId, marginId){
